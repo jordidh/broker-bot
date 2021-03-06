@@ -1,0 +1,107 @@
+"use strict";
+
+/**
+ * Module dependencies
+ */
+var config = require('../config/config');
+var app = require('../app');
+var debug = require('debug')('trading-bot:server');
+var http = require('http');
+//var https = require('https');
+//var certs = require('../config/certs/certs');
+var logger = require('../api/logger');
+
+/**
+ * Get port from environment and store in Express.
+ */
+var port = normalizePort(config.APP_PORT_HTTP);
+app.set('portHttp', port);
+//var portHttps = normalizePort(config.APP_PORT_HTTPS);
+//app.set('portHttps', portHttps);
+
+/**
+ * Create HTTP / HTTPS Server.
+ */
+var serverHttp = http.createServer(app);
+//var serverHttps = https.createServer(certs.ssl, app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+serverHttp.listen(port)
+serverHttp.on('error', onError)
+serverHttp.on('listening', onListeningHttp)
+
+//serverHttps.listen(portHttps)
+//serverHttps.on('error', onError)
+//serverHttps.on('listening', onListeningHttps)
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+function onListeningHttp() {
+  var addr = serverHttp.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+  logger.info({ message: 'SERVIDOR HTTP: ' + bind })
+}
+
+/**
+ * Event listener for HTTPS SecureServer "listening" event.
+ */
+function onListeningHttps() {
+  var addr = serverHttps.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+  logger.info({ message: 'SERVIDOR HTTPS: ' + bind })
+}
