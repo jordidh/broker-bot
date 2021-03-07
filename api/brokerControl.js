@@ -3,6 +3,7 @@
 //const {SMA, EMA} = require('trading-signals');
 const Big = require('big.js');
 const tradingSignals = require('trading-signals');
+const { BollingerBands } = require('trading-signals');
 
 /**
  * Funció que calcula el l'indicador especificat d'un array de valors
@@ -36,15 +37,45 @@ exports.ApplyIndicator = async function(prices, indicator, period, timeIndex, pr
 
         let currentIndicator = null;
         switch(indicator) {
-            case "SMA":
+            case "SMA":  // Simple Moving Average (SMA) => tested OK
                 currentIndicator = new tradingSignals.SMA(period);
                 break;
-            case "EMA":
+            case "EMA": // Exponential Moving Average (EMA) =>  tested OK
                 currentIndicator = new tradingSignals.EMA(period);
                 break;
-            case "DEMA":
-                    currentIndicator = new tradingSignals.DEMA(period);
-                    break;
+            case "DEMA": // Double Exponential Moving Average (DEMA) => tested OK
+                currentIndicator = new tradingSignals.DEMA(period);
+                break;
+            case "ABANDS": //Acceleration Bands (ABANDS)
+                currentIndicator = new tradingSignals.AccelerationBands(period);
+                break;
+            case "ADX": // Average Directional Index (ADX)
+                currentIndicator = new tradingSignals.ADX(period);
+                break;
+            case "ATR": // Average True Range (ATR)
+                currentIndicator = new tradingSignals.ATR(period);
+                break;
+            case "BBANDS": //Bollinger Bands (BBANDS)
+                currentIndicator = new tradingSignals:BollingerBands(period);
+                break;
+            case "CG": // Center of Gravity (CG)
+                currentIndicator = new tradingSignals.CG(period);
+                break;
+            case "DMA": // Double Moving Average (DMA)
+                currentIndicator = new tradingSignals.DMA(period);
+                break;
+            case "MACD": // Moving Average Convergence Divergence (MACD)
+                currentIndicator = new tradingSignals.MACD(period);
+                break;
+            case "ROC": // Rate-of-Change (ROC)
+                currentIndicator = new tradingSignals.ROC(period);
+                break;
+            case "RSI": // Relative Strength Index (RSI)
+                currentIndicator = new tradingSignals.RSI(period);
+                break;
+            case "SMMA": // Smoothed Moving Average (SMMA)
+                currentIndicator = new tradingSignals.SMMA(period);
+                break;
             default:
                 return { "error" : [ "Indicador " + indicator + " no implementat" ], "result" : { } }
         }
