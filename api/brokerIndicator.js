@@ -1,8 +1,5 @@
 "use strict";
 
-const { setMaxListeners } = require("npm");
-
-
 /**
  * Funció que calcula el SMA d'un array de valors: és la mitjana (la suma dividida pel número de valors)
  * @param {*} prices : array de preus sobre el que es calcularà el SMA
@@ -29,15 +26,18 @@ exports.SimpleMovingAverage = async function(prices, timeIndex, priceIndex, peri
             return { "error" : [ "error, prices array length must be greater than the period" ], "result" : { } }
         }
 
-        let sma = [];
-        for (let i = period; i < prices.length; i++) {
+        let sma = new Array(prices.length);
+        for (let i = 0; i < prices.length; i++) {
             let currentSMA = 0;
-            //console.log("value " + i);
-            for (let j = i - period; j < i; j++) {
-                //console.log("j(" + j + ")=" + prices[j][priceIndex]);
-                currentSMA += prices[j][priceIndex];
-            }
-            sma.push([prices[i][timeIndex], currentSMA / period]);
+
+            if (i >= period) {
+                //console.log("value " + i);
+                for (let j = i - period; j < i; j++) {
+                    //console.log("j(" + j + ")=" + prices[j][priceIndex]);
+                    currentSMA += prices[j][priceIndex];
+                }
+            } 
+            sma[i] = [prices[i][timeIndex], currentSMA / period];
         }
 
         return {
@@ -78,25 +78,30 @@ exports.ExponentialMovingAverage = async function(prices, timeIndex, priceIndex,
 
         let a = 2 / (period + 1);
 
-        let ema = [];
-        for (let i = period; i < prices.length; i++) {
+        let ema = new Array(prices.length);
+        for (let i = 0; i < prices.length; i++) {
             let currentEma = 0;
-            // En el primer càlcul substituim el EMA(t-1) per l'SMA
-            if (ema.length === 0) {
-                // Calculem l'SMA
-                let currentSMA = 0;
-                for (let j = i - period; j < i; j++) {
-                    currentSMA += prices[j][priceIndex];
+
+            if (i >= period) {
+                // En el primer càlcul substituim el EMA(t-1) per l'SMA
+                if (i === period) {
+                    // Calculem l'SMA
+                    let currentSMA = 0;
+                    for (let j = i - period; j < i; j++) {
+                        currentSMA += prices[j][priceIndex];
+                    }
+                    // Guardem SMA com a EMA
+                    currentEma = (currentSMA / period);
+                } else {
+                    // Calculem l'EMA
+                    //console.log("price=" + prices[i][priceIndex] + ", ema(t-1)=" + ema[ema.length - 1][1]);
+                    currentEma = (a * prices[i][priceIndex]) + ((1 - a) * ema[i - 1][1]);
                 }
-                // Guardem SMA com a EMA
-                currentEma = (currentSMA / period);
-            } else {
-                // Calculem l'EMA
-                //console.log("price=" + prices[i][priceIndex] + ", ema(t-1)=" + ema[ema.length - 1][1]);
-                currentEma = (a * prices[i][priceIndex]) + ((1 - a) * ema[ema.length - 1][1]);
             }
+            
             //console.log(currentEma);
-            ema.push([prices[i][timeIndex], currentEma]);
+            //ema.push([prices[i][timeIndex], currentEma]);
+            ema[i] = [prices[i][timeIndex], currentEma];
         }
 
         return {
@@ -137,28 +142,38 @@ exports.DoubleExponentialMovingAverage = async function(prices, timeIndex, price
 
         let a = 2 / (period + 1);
 
-        let dema = [];
-        for (let i = period; i < prices.length; i++) {
+        let dema = new Array(prices.length);
+        let lastEma = 0;
+        for (let i = 0; i < prices.length; i++) {
+            let currentDema = 0;
             let currentEma = 0;
-            // En el primer càlcul substituim el EMA(t-1) per l'SMA
-            if (dema.length === 0) {
-                // Calculem l'SMA
-                let currentSMA = 0;
-                for (let j = i - period; j < i; j++) {
-                    currentSMA += prices[j][priceIndex];
+            let currentEma2 = 0;
+            if (i >= period) {
+                // En el primer càlcul substituim el EMA(t-1) per l'SMA
+                if (i === period) {
+                    // Calculem l'SMA
+                    let currentSMA = 0;
+                    for (let j = i - period; j < i; j++) {
+                        currentSMA += prices[j][priceIndex];
+                    }
+                    // Guardem SMA com a EMA
+                    currentEma = (currentSMA / period);
+                    currentEma2 = (a * currentEma) + ((1 - a) * currentEma);
+                    lastEma = currentEma;
+                } else {
+                    // Calculem l'EMA
+                    //console.log("price=" + prices[i][priceIndex] + ", ema(t-1)=" + ema[ema.length - 1][1]);
+                    //currentEma = (a * prices[i][priceIndex]) + ((1 - a) * dema[i - 1][1]);
+                    currentEma = (a * prices[i][priceIndex]) + ((1 - a) * lastEma);
+                    currentEma2 = (a * currentEma) + ((1 - a) * lastEma);
+                    lastEma = currentEma;
                 }
-                // Guardem SMA com a EMA
-                currentEma = (currentSMA / period);
-                
-            } else {
-                // Calculem l'EMA
-                //console.log("price=" + prices[i][priceIndex] + ", ema(t-1)=" + ema[ema.length - 1][1]);
-                currentEma = (a * prices[i][priceIndex]) + ((1 - a) * dema[dema.length - 1][1]);
+                currentDema = (2 * currentEma) - currentEma2;
             }
-            let currentEma2 = (a * prices[i][priceIndex]) + ((1 - a) * currentEma);
-            let currentDema = (2 * currentEma) - currentEma2;
-            dema.push([prices[i][timeIndex], currentDema]);
+            dema[i] = [prices[i][timeIndex], currentDema];
         }
+
+        console.log(dema);
 
         return {
             "error" : [],
