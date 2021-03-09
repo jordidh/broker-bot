@@ -15,18 +15,32 @@ Highcharts.getJSON('http://localhost:4300/data/kraken', function (data) {   // f
       text: 'AAPL Stock Price'
     },
 
+    legend: {
+      enabled: true
+    },
+
+    plotOptions: {
+      series: {
+          showInLegend: true
+      }
+    },
+
     series: [{
       type: 'ohlc',
+      id: 'aapl',
       name: 'AAPL Stock Price',
-      data: data,
-      dataGrouping: {
-        units: [[
-          'week', // unit name
-          [1] // allowed multiples
-        ], [
-          'month',
-          [1, 2, 3, 4, 6]
-        ]]
+      data: data
+    }, {
+      type: 'dema',
+      linkedTo: 'aapl',
+      params: {
+        period: 20
+      }
+    }, {
+      type: 'dema',
+      linkedTo: 'aapl',
+      params: {
+        period: 50
       }
     }]
   });
