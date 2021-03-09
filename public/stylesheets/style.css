@@ -260,3 +260,65 @@ p.small {
 #chart {
     display: block;
 }
+
+
+
+/* Estils per la pàgina dashboard */
+ 
+.row0 {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+.row1 {
+    position: absolute;
+    top: 0px;
+    left: 475px;
+}
+.row2 {
+    position: absolute;
+    top: 0px;
+    left: 950px;
+}
+
+.row3 {
+    position: absolute;
+    top: 475px;
+    left: 0px;
+    }
+.row4 {
+    position: absolute;
+    top: 475px;
+    left: 475px;
+}
+.row5 {
+    position: absolute;
+    top: 475px;
+    left: 950px;
+}
+
+.row6 {
+    position: absolute;
+    top: 950px;
+    left: 0px;
+    }
+.row7 {
+    position: absolute;
+    top: 950px;
+    left: 475px;
+}
+.row8 {
+    position: absolute;
+    top: 950px;
+    left: 950px;
+}
+
+@media (max-width: 640px) {
+    .float {
+        position: static;
+        float:left;
+    }
+    .container-fluid {
+        margin: auto;
+    }
+}

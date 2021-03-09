@@ -1,0 +1,45 @@
+extends layout
+
+block variables
+    - var msgAlert = m_alert
+    - var msgSuccess = m_success
+    - var msgInfo = m_info
+    - var msgWarning = m_warning
+
+block content
+  h1 #{name} V #{version}
+
+
+  div
+    link(rel='stylesheet' href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css')
+    .container-fluid
+      if views
+        each view, i in views
+          div(class="row" + i)
+            script(type='text/javascript' src='https://s3.tradingview.com/tv.js')
+            script(type='text/javascript').
+              new TradingView.widget({
+              "width": 475,
+              "height": 475,
+              "symbol": "#{view.symbol}",
+              "interval": "#{view.interval}",
+              "timezone": "Etc/UTC",
+              "theme": "Dark",
+              "style": "1",
+              "locale": "en",
+              "toolbar_bg": "#f1f3f6",
+              "enable_publishing": true,
+              "hide_side_toolbar": false,
+              "allow_symbol_change": true,
+              "details": true,
+              "hideideas": true,
+              "studies": [
+              "RSI@tv-basicstudies",
+              "MASimple@tv-basicstudies",
+              "MASimple@tv-basicstudies",
+              "MASimple@tv-basicstudies",
+              "MACD@tv-basicstudies"
+              ]
+              });
+
+  #container(style='height: 400px; min-width: 310px')
