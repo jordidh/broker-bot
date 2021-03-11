@@ -56,7 +56,7 @@ exports.ApplyIndicator = async function(prices, indicator, period, timeIndex, pr
                 currentIndicator = new tradingSignals.ATR(period);
                 break;
             case "BBANDS": //Bollinger Bands (BBANDS)
-                currentIndicator = new tradingSignals:BollingerBands(period);
+                currentIndicator = new tradingSignals.BollingerBands(period);
                 break;
             case "CG": // Center of Gravity (CG)
                 currentIndicator = new tradingSignals.CG(period);
