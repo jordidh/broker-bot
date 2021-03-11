@@ -1,0 +1,38 @@
+extends layout
+
+block variables
+    - var msgAlert = m_alert
+    - var msgSuccess = m_success
+    - var msgInfo = m_info
+    - var msgWarning = m_warning
+
+block content
+  h1 #{name} V #{version}
+
+  div
+    if markets
+      ul
+      each market, i in markets
+        li 
+          b Market #{market.id} - Extracts data from #{market.api}
+          if market.tradingBots
+            each tbot, i in market.tradingBots
+              p Trading bots linked with tihis market:
+              .container
+                fieldset
+                  form(action=tbot.url, method='post')
+                    | 📉 Test buy to #{tbot.url} - pair #{tbot.pair} &nbsp;
+                    input.ghost-input(name='action', type='hidden', value='buy')
+                    input.ghost-input(name='pair', type='hidden', value=tbot.pair)
+                    input.ghost-input(name='token', type='hidden', value=tbot.token)
+                    input.ghost-input(name='test', type='hidden', value='mock-kraken')
+                    input.ghost-button(name='btn', type='submit', value='Test Buy')
+              .container
+                fieldset
+                  form(action=tbot.url, method='post')
+                    | 📈 Test sell to #{tbot.url} - pair #{tbot.pair} &nbsp;
+                    input.ghost-input(name='action', type='hidden', value='sell')
+                    input.ghost-input(name='pair', type='hidden', value=tbot.pair)
+                    input.ghost-input(name='token', type='hidden', value=tbot.token)
+                    input.ghost-input(name='test', type='hidden', value='mock-kraken')
+                    input.ghost-button(name='btn', type='submit', value='Test Sell')

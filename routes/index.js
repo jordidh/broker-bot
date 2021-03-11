@@ -16,12 +16,12 @@ var BotPersistentData = require('../api/database/botPersistentData');
 
 
 router.get('/', function (req, res, next) {
-    let postId = uuidv1();
+    let reqId = uuidv1();
 
     // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-    logger.info(postId + `: Rebut GET des de ` + ip);
+    logger.info(reqId + `: Rebut GET des de ` + ip);
 
     try {
         res.render('index', { name: pjson.name, version: pjson.version});
@@ -32,18 +32,35 @@ router.get('/', function (req, res, next) {
 });
 
 router.get('/dashboard', function (req, res, next) {
-    let postId = uuidv1();
+    let reqId = uuidv1();
 
     // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-    logger.info(postId + `: Rebut GET des de ` + ip);
+    logger.info(reqId + `: Rebut GET des de ` + ip);
 
     try {
         res.render('dashboard', { name: pjson.name, version: pjson.version, views: config.dashboard.views });
     } catch (e) {
         logger.error(e);
         res.render('dashboard', { name: pjson.name, version: pjson.version, m_alert: e.message });
+    }
+});
+
+
+router.get('/markets', function (req, res, next) {
+    let reqId = uuidv1();
+
+    // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+    logger.info(reqId + `: Rebut GET des de ` + ip);
+
+    try {
+        res.render('markets', { name: pjson.name, version: pjson.version, markets : config.jobs.checkMarkets.markets });
+    } catch (e) {
+        logger.error(e);
+        res.render('markets', { name: pjson.name, version: pjson.version, m_alert: e.message });
     }
 });
 
