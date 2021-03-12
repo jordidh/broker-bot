@@ -4,12 +4,12 @@
 process.env.NODE_ENV = 'test';
 
 //Require the dev-dependencies
-let chai = require('chai');
+const chai = require('chai');
 //let chaiHttp = require('chai-http');
-let should = chai.should();
-let expect    = require("chai").expect;
+const should = chai.should();
+const expect    = require("chai").expect;
 
-let brokerIndexes = require('../../api/brokerControl');
+const brokerControl = require('../../api/brokerControl');
 
 
 describe('Broker Indexes, SimpleMovingAverage', () =>  {
@@ -57,7 +57,7 @@ describe('Broker Indexes, SimpleMovingAverage', () =>  {
             ]
         };
 
-        var result = await brokerIndexes.ApplyIndicator(prices, "SMA", 8, 0, 1);
+        var result = await brokerControl.ApplyIndicator(prices, "SMA", 8, 0, 1);
 
         expect(result).to.deep.equal(smaExpected);
     });
@@ -108,7 +108,7 @@ describe('Broker Indexes, ExponentialMovingAverage', () =>  {
             ]
         };
 
-        var result = await brokerIndexes.ApplyIndicator(prices, "EMA", 8, 0, 1);
+        var result = await brokerControl.ApplyIndicator(prices, "EMA", 8, 0, 1);
 
         expect(result).to.deep.equal(emaExpected);
     });
@@ -166,7 +166,7 @@ describe('Broker Indexes, DoubleExponentialMovingAverage', () =>  {
             ]
         };
 
-        var result = await brokerIndexes.ApplyIndicator(prices, "DEMA", 10, 0, 1);
+        var result = await brokerControl.ApplyIndicator(prices, "DEMA", 10, 0, 1);
         
         expect(result).to.deep.equal(demaExpected);
     });

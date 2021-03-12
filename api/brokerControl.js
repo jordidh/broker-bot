@@ -108,3 +108,26 @@ exports.ApplyIndicator = async function(prices, indicator, period, timeIndex, pr
         return { "error" : [ "exception: " + e.message ], "result" : { } }
     }
 }
+
+
+/**
+ * 
+ * @param {*} config 
+ * {
+ *     "id" : "BTC",
+ *     "api" : "https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=5",
+ *     "strategy" : "",
+ *     "decisionWindow" : "",
+ *     "tradingBots" : [
+ *         {
+ *             "url" : "http://localhost:4401",
+ *             "token" : "TEST_TOKEN",
+ *             "pair" : "BTC/EUR"
+ *         }
+ *     ]
+ * }
+ * @param {*} cdb
+ */
+exports.CheckAndDecide = async function(config, db) {
+
+}
