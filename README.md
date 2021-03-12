@@ -117,9 +117,11 @@ El fitxer de configuració ha de tenir la següent estructura:
                         }
                     }
 
+                    Exemples:
                     https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=5   // retorna les 48h últimes a intervals de 5 minuts
                     https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=60   // retorna l'últim mes a intervals de 60 minuts
                     https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=1440   // retorna els últims 2 anys a intervals de 1440 minuts (24 hores)
+                    https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=5&since=1615535000  // retorna en intervals de 5 minusts desde 1615535100 (des del primer valor superior al proporcionat al paràmetre since)
                     */
             ]
         }
@@ -127,12 +129,12 @@ El fitxer de configuració ha de tenir la següent estructura:
     // Vistes simultànies que es mostraran a la web dashboard
     "dashboard" : {
         "views" : [
-            { "symbol" : "KRAKEN:XBTEUR", "interval" : "D" },
-            { "symbol" : "KRAKEN:ETHEUR", "interval" : "D" },
-            { "symbol" : "KRAKEN:ADAEUR", "interval" : "D" },
-            { "symbol" : "KRAKEN:LTCEUR", "interval" : "D" },
-            { "symbol" : "BITTREX:NEOBTC", "interval" : "D" },
-            { "symbol" : "BITTREX:PAYBTC", "interval" : "D" }
+            { "symbol" : "KRAKEN:XBTEUR", "interval" : "D", "widget" : { "weight" : 600, "height" : 475 } },
+            { "symbol" : "KRAKEN:ETHEUR", "interval" : "D", "widget" : { "weight" : 600, "height" : 475 } },
+            { "symbol" : "KRAKEN:ADAEUR", "interval" : "D", "widget" : { "weight" : 600, "height" : 475 } },
+            { "symbol" : "KRAKEN:LTCEUR", "interval" : "D", "widget" : { "weight" : 600, "height" : 475 } },
+            { "symbol" : "BITTREX:NEOBTC", "interval" : "D", "widget" : { "weight" : 600, "height" : 475 } },
+            { "symbol" : "BITTREX:PAYBTC", "interval" : "D", "widget" : { "weight" : 600, "height" : 475 } }
         ]
     }
 }

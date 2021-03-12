@@ -267,50 +267,50 @@ p.small {
  
 .row0 {
     position: absolute;
-    top: 0px;
+    top: 100px;
     left: 0px;
 }
 .row1 {
     position: absolute;
-    top: 0px;
-    left: 475px;
+    top: 100px;
+    left: 600px;
 }
 .row2 {
     position: absolute;
-    top: 0px;
-    left: 950px;
+    top: 100px;
+    left: 1200px;
 }
 
 .row3 {
     position: absolute;
-    top: 475px;
+    top: 575px;
     left: 0px;
     }
 .row4 {
     position: absolute;
-    top: 475px;
-    left: 475px;
+    top: 575px;
+    left: 600px;
 }
 .row5 {
     position: absolute;
-    top: 475px;
-    left: 950px;
+    top: 575px;
+    left: 1200px;
 }
 
 .row6 {
     position: absolute;
-    top: 950px;
+    top: 1050px;
     left: 0px;
     }
 .row7 {
     position: absolute;
-    top: 950px;
-    left: 475px;
+    top: 1050px;
+    left: 600px;
 }
 .row8 {
     position: absolute;
-    top: 950px;
-    left: 950px;
+    top: 1050px;
+    left: 1200px;
 }
 
 @media (max-width: 640px) {
