@@ -173,7 +173,7 @@ exports.DoubleExponentialMovingAverage = async function(prices, timeIndex, price
             dema[i] = [prices[i][timeIndex], currentDema];
         }
 
-        console.log(dema);
+        //console.log(dema);
 
         return {
             "error" : [],

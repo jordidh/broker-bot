@@ -57,7 +57,7 @@ describe('Broker Indexes, SimpleMovingAverage', () =>  {
             ]
         };
 
-        var result = await brokerControl.ApplyIndicator(prices, "SMA", 8, 0, 1);
+        var result = await brokerControl.applyIndicator(prices, "SMA", 8, 0, 1);
 
         expect(result).to.deep.equal(smaExpected);
     });
@@ -108,7 +108,7 @@ describe('Broker Indexes, ExponentialMovingAverage', () =>  {
             ]
         };
 
-        var result = await brokerControl.ApplyIndicator(prices, "EMA", 8, 0, 1);
+        var result = await brokerControl.applyIndicator(prices, "EMA", 8, 0, 1);
 
         expect(result).to.deep.equal(emaExpected);
     });
@@ -166,7 +166,7 @@ describe('Broker Indexes, DoubleExponentialMovingAverage', () =>  {
             ]
         };
 
-        var result = await brokerControl.ApplyIndicator(prices, "DEMA", 10, 0, 1);
+        var result = await brokerControl.applyIndicator(prices, "DEMA", 10, 0, 1);
         
         expect(result).to.deep.equal(demaExpected);
     });

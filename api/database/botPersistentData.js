@@ -20,10 +20,12 @@ class BotPersistentData {
     CheckDatabaseTables = async function() {
         try {
             // Tabla logs
-            let sqlRes = await sqlite.run(`CREATE TABLE IF NOT EXISTS logs (
+            let sqlRes = await sqlite.run(`CREATE TABLE IF NOT EXISTS marketData (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                date DATETIME NOT NULL,
-                log TEXT NOT NULL            
+                market INTEGER NOT NULL,
+                windowStart INTEGER NOT NULL,
+                windowEnd INTEGER NOT NULL,
+                indicatorValues TEXT NOT NULL            
             )`);
 
             return {
@@ -39,25 +41,72 @@ class BotPersistentData {
     }
 
     /**
-     * Funció que guarda un log per la data i hora actual
-     * @param {*} text : text que es guardarà en el log
+     * Funció que recuperem l'última dada emmagatzemada per aquest mercat
+     * Retorna una cosa del tipus: {
+     *   market : "id",
+     *   windowStart : 1614933060,
+     *   windowEnd : 1614945000,
+     *   indicatorValues : [
+     *     { "name" : "DEMA", "period" : 20, "VALUE" : 34 },
+     *     { "name" : "DEMA", "period" : 50, "VALUE" : 34 }
+     *   ]
+     * }
+     * @param {*} marketId : id del mercat que es recuperarà
      */
-    AddLog = async function (text) {
+    getLastMarketData = async function(marketId) {
         try {
-            return await sqlite.run(`INSERT INTO logs (date, log) VALUES (datetime(),'` + text + `')`);
+            let data = {};
+
+            data = await sqlite.all(`SELECT * FROM marketData WHERE market = '` + marketId + `' ORDER BY windowEnd DESC LIMIT 1`);
+            if (data && data != null && Array.isArray(data) && data.length > 0 && data[0].indicatorValues){
+                data[0].indicatorValues = JSON.parse(data[0].indicatorValues);
+                return {
+                    "error" : [],
+                    "result" : data[0]
+                }
+            } else {
+                return {
+                    "error" : [],
+                    "result" : []
+                }
+            }
         } catch (err) {
-            console.error(err);
-            return err;
+            return {
+                "error" : [ err ],
+                "result" : []
+            }
         }
     }
 
-    GetLastLogs = async function (numLogs) {
+    /**
+     * Funció que guarda dades d'unmercat a la BD
+     * @param {*} data : objecte del tipus: {
+     *   market : "id",
+     *   windowStart : 1614933060,
+     *   windowEnd : 1614945000,
+     *   indicatorValues : [
+     *     { "name" : "DEMA", "period" : 20, "VALUE" : 34 },
+     *     { "name" : "DEMA", "period" : 50, "VALUE" : 34 }
+     *   ]
+     * }
+     */
+    saveCurrentMarketData = async function(data) {
         try {
-            let sql = `SELECT * FROM logs ORDER BY date DESC LIMIT ` + numLogs;
-            return await sqlite.all(sql);
+            let sql = `INSERT INTO marketData (market, windowStart, windowEnd, indicatorValues) 
+                       VALUES ('` + data.market + `',` + data.windowStart + `,` + data.windowEnd + `,'` + JSON.stringify(data.indicatorValues) + `')`;
+
+            let result = await sqlite.run(sql);
+
+            return {
+                "error" : [ ],
+                "result" : result
+            }
         } catch (err) {
             console.error(err);
-            return err;
+            return {
+                "error" : [ err ],
+                "result" : []
+            }
         }
     }
 }

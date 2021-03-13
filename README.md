@@ -67,10 +67,14 @@ El fitxer de configuració ha de tenir la següent estructura:
             "schedule": "0 * * * * *",  // Cada minut al segon 0
             "markets": [
                 {
-                    "id" : "",              // Identificador del mercat que s'analitzarà per generar ordres de compra i venda
+                    "id" : "",              // Identificador del mercat que s'analitzarà per generar ordres de compra i venda, les dades es guardaran a la BD amb aquest id
                     "api" : "",             // URL que es farà servir per obtenir les dades, p.e. https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=5
                     "strategy" : "",        // Mètode JS que aplicarà els indicadors i decidirà si comprar o vendre
                     "decision-window" : "", // Finestra de decisió que s'aplicarà: és el temps sobre el que es mesuraràn els idicadors, hauria de correspondre a la planificació d'execució d'aquest job
+                    "indicator" : [        // Indicadors que s'aplicaran a les dades per poder decidir
+                        { "name" : "DEMA", "period" : 20 },
+                        { "name" : "DEMA", "period" : 50 }
+                    ],
                     "trading-bots" : [      // Bots de trading a que s'enviarà un POST per comprar o vendre
                         {
                             "url" : "",     // URL per accedir amb un POST al trading-bot

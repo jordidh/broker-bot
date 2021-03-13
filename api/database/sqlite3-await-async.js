@@ -2,7 +2,7 @@
  * Module dependencies
  */
 const sqlite3 = require('sqlite3').verbose();
-const DATABASE_PATH = './database/trading.db';
+const DATABASE_PATH = './database/broker.db';
 
 // Exports
 var db = new sqlite3.Database(DATABASE_PATH, (err) => {
@@ -32,7 +32,7 @@ exports.get = function (query, params) {
         db.get(query, params, function (err, row) {
             if (err) reject("Read error: " + err.message)
             else {
-                resolve(row)
+                resolve(row);
             }
         });
     });
@@ -60,12 +60,12 @@ exports.each = function (query, params, action) {
                 if (err) reject("Read error: " + err.message)
                 else {
                     if (row) {
-                        action(row)
+                        action(row);
                     }
                 }
             });
             db.get("", function (err, row) {
-                resolve(true)
+                resolve(true);
             });
         });
     });
