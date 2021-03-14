@@ -39,8 +39,8 @@ async function checkMarket(markets) {
         //   windowStart : 1614933060,
         //   windowEnd : 1614945000,
         //   indicatorValues : [
-        //     { "name" : "DEMA", "period" : 20, "VALUE" : 34 },
-        //     { "name" : "DEMA", "period" : 50, "VALUE" : 34 }
+        //     { "name" : "DEMA", "period" : 20, "value" : 34 },
+        //     { "name" : "DEMA", "period" : 50, "value" : 34 }
         //   ]
         // }
         let lastData = await botData.getLastMarketData(market.id);
@@ -49,18 +49,21 @@ async function checkMarket(markets) {
             logger.error("checking markets, error accessing database for market.id = " + market.id + ": " + lastData.error[0]);
             return;
         }
-        // Si la diferència entra windowStart i windowEnd és molt petita (menys de 10 minuts) posem windowStart = 0
-        if ((lastData.result.windowEnd - lastData.result.windowStart) <  60000) {
-            lastData.result.windowStart = lastData.result.windowEnd - 60000;
-        }
 
         // Obtenim les dades de kraken des de l'inici de l'última finestra 
         // (així deixem marge per calcular els indicadors correctament)
         // Si no s'ha pogut obtenir les últimes dades recuperem tot el que ens envii l'exchange
         let url = market.api;
-        if (lastData && lastData.result) {
-            url = market.api + "&since=" + lastData.result.windowStart;
-        }
+        // Sempre demanem totes les dades, ja que segons l'interval que es faci servir pot ser que ens quedem curts
+        // No és el mateix demanar uninterval horari que de 5 minuts, segons cada cas s'hauria de demanar dades des d'un
+        // punt inicial (since) diferent, per simplificar les demanem totes
+        // Si la diferència entra windowStart i windowEnd és molt petita (menys de 10 minuts) posem windowStart = 0
+        //if ((lastData.result.windowEnd - lastData.result.windowStart) <  60000) {
+        //    lastData.result.windowStart = lastData.result.windowEnd - 60000;
+        //}
+        //if (lastData && lastData.result) {
+        //    url = market.api + "&since=" + lastData.result.windowStart;
+        //}
         logger.info("URL to find prices = " + url);
 
         let prices = await brokerControl.getPricesFromURL(url);

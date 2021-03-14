@@ -1,0 +1,114 @@
+extends layout
+
+block variables
+    - var msgAlert = m_alert
+    - var msgSuccess = m_success
+    - var msgInfo = m_info
+    - var msgWarning = m_warning
+
+block extraScripts
+  script(src='https://code.highcharts.com/stock/highstock.js')
+  script(src='https://code.highcharts.com/stock/modules/data.js')
+  script(src='https://code.highcharts.com/stock/modules/exporting.js')
+  script(src="https://code.highcharts.com/stock/indicators/indicators.js")
+  script(src="https://code.highcharts.com/stock/indicators/ema.js")
+  script(src="https://code.highcharts.com/stock/indicators/dema.js")
+
+block extraStyles
+  link(rel='stylesheet' href='stylesheets/analysis.css')
+
+block content
+  h1 #{name} V #{version}
+
+  p Page to show the last indicator values and the decision taken by the bot
+
+  figure.highcharts-figure
+  #container(style='height: 420px; min-width: 310px')
+  p.highcharts-description
+    | Line chart
+
+  script(type='text/javascript').
+    // create the chart
+    var colors = Highcharts.getOptions().colors;
+
+    Highcharts.chart('container', {
+      chart: {
+        type: 'spline',
+        zoomType: 'y'
+      },
+
+      legend: {
+        symbolWidth: 40
+      },
+
+      title: {
+        //text: 'Most common desktop screen readers'
+        text: "#{data.title}"
+      },
+
+      subtitle: {
+        text: '#{data.subtitle}'
+      },
+
+      yAxis: {
+        title: {
+          text: '#{data.yAxisTitle}'
+        },
+        accessibility: {
+          description: '#{data.yAxisDesc}'
+        }
+      },
+
+      xAxis: {
+        title: {
+          text: '#{data.xAxisTitle}'
+        },
+        accessibility: {
+          description: '#{data.xAxisDesc}'
+        },
+        categories: !{data.xAxisCategories}
+      },
+
+      tooltip: {
+        valueSuffix: '#{data.tooltipValueSuffix}'
+      },
+
+      plotOptions: {
+        series: {
+          point: {
+            events: {
+              click: function () {
+                window.location.href = this.series.options.website;
+              }
+            }
+          },
+          cursor: 'pointer'
+        }
+      },
+
+      series: !{data.series},
+
+      responsive: {
+        rules: [{
+          condition: {
+            maxWidth: 550
+          },
+          chartOptions: {
+            chart: {
+              spacingLeft: 3,
+              spacingRight: 3
+            },
+            legend: {
+              itemWidth: 150
+            },
+            xAxis: {
+              categories: !{data.xAxisCategories},
+              title: ''
+            },
+            yAxis: {
+              visible: false
+            }
+          }
+        }]
+      }
+    });

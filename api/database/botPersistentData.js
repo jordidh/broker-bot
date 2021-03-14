@@ -47,8 +47,8 @@ class BotPersistentData {
      *   windowStart : 1614933060,
      *   windowEnd : 1614945000,
      *   indicatorValues : [
-     *     { "name" : "DEMA", "period" : 20, "VALUE" : 34 },
-     *     { "name" : "DEMA", "period" : 50, "VALUE" : 34 }
+     *     { "name" : "DEMA", "period" : 20, "value" : 34 },
+     *     { "name" : "DEMA", "period" : 50, "value" : 34 }
      *   ]
      * }
      * @param {*} marketId : id del mercat que es recuperarà
@@ -79,14 +79,101 @@ class BotPersistentData {
     }
 
     /**
+     * Funció que recuperem les últimes dades emmagatzemades per aquest mercat
+     * Retorna una cosa del tipus: [{
+     *   market : "id",
+     *   windowStart : 1614933060,
+     *   windowEnd : 1614945000,
+     *   indicatorValues : [
+     *     { "name" : "DEMA", "period" : 20, "value" : 34 },
+     *     { "name" : "DEMA", "period" : 50, "value" : 34 }
+     *   ]
+     * },...]
+     * @param {*} marketId : id del mercat que es recuperarà
+     * @param {*} limit : numero màxim de dades que es recuperaran
+     */
+    getLastMarketDatasDesc = async function(marketId, limit) {
+        try {
+            let data = {};
+
+            data = await sqlite.all(`SELECT * FROM marketData WHERE market = '` + marketId + `' ORDER BY windowEnd DESC LIMIT ` + limit);
+            if (data && data != null && Array.isArray(data) && data.length > 0){
+                // Parsegem a json en totes les dades obtingudes
+                for (let i = 0; i < data.length; i++) {
+                    data[i].indicatorValues = JSON.parse(data[i].indicatorValues);  
+                }
+
+                return {
+                    "error" : [],
+                    "result" : data
+                }
+            } else {
+                return {
+                    "error" : [],
+                    "result" : []
+                }
+            }
+        } catch (err) {
+            return {
+                "error" : [ err ],
+                "result" : []
+            }
+        }
+    }
+
+    /**
+     * Funció que recuperem les últimes dades emmagatzemades per aquest mercat
+     * Retorna una cosa del tipus: [{
+     *   market : "id",
+     *   windowStart : 1614933060,
+     *   windowEnd : 1614945000,
+     *   indicatorValues : [
+     *     { "name" : "DEMA", "period" : 20, "value" : 34 },
+     *     { "name" : "DEMA", "period" : 50, "value" : 34 }
+     *   ]
+     * },...]
+     * @param {*} marketId : id del mercat que es recuperarà
+     * @param {*} limit : numero màxim de dades que es recuperaran
+     */
+    getLastMarketDatasAsc = async function(marketId, limit) {
+        try {
+            let data = {};
+
+            data = await sqlite.all(`SELECT * FROM marketData WHERE market = '` + marketId + `' ORDER BY windowEnd DESC LIMIT ` + limit);
+            if (data && data != null && Array.isArray(data) && data.length > 0){
+                // Parsegem a json en totes les dades obtingudes
+                for (let i = 0; i < data.length; i++) {
+                    data[i].indicatorValues = JSON.parse(data[i].indicatorValues);  
+                }
+
+                return {
+                    "error" : [],
+                    // Li donem la volta per tenir-los en mode ascendent
+                    "result" : data.reverse()
+                }
+            } else {
+                return {
+                    "error" : [],
+                    "result" : []
+                }
+            }
+        } catch (err) {
+            return {
+                "error" : [ err ],
+                "result" : []
+            }
+        }
+    }
+
+    /**
      * Funció que guarda dades d'unmercat a la BD
      * @param {*} data : objecte del tipus: {
      *   market : "id",
      *   windowStart : 1614933060,
      *   windowEnd : 1614945000,
      *   indicatorValues : [
-     *     { "name" : "DEMA", "period" : 20, "VALUE" : 34 },
-     *     { "name" : "DEMA", "period" : 50, "VALUE" : 34 }
+     *     { "name" : "DEMA", "period" : 20, "value" : 34 },
+     *     { "name" : "DEMA", "period" : 50, "value" : 34 }
      *   ]
      * }
      */
@@ -100,6 +187,34 @@ class BotPersistentData {
             return {
                 "error" : [ ],
                 "result" : result
+            }
+        } catch (err) {
+            console.error(err);
+            return {
+                "error" : [ err ],
+                "result" : []
+            }
+        }
+    }
+
+
+    /**
+     * Funció que recupera els diferents mercats emmagatzemats
+     */
+    getMarkets = async function() {
+        try {
+            let sql = "SELECT DISTINCT market FROM marketData";
+            let data = await sqlite.all(sql);
+            if (data && data != null && Array.isArray(data) && data.length > 0){
+                return {
+                    "error" : [],
+                    "result" : data
+                }
+            } else {
+                return {
+                    "error" : [],
+                    "result" : []
+                }
             }
         } catch (err) {
             console.error(err);

@@ -16,7 +16,7 @@ var logger = require('../api/logger');
 /**
  * Get port from environment and store in Express.
  */
-var port = normalizePort(config.APP_PORT_HTTP);
+var port = normalizePort(process.env.PORT || config.APP_PORT_HTTP);
 app.set('portHttp', port);
 //var portHttps = normalizePort(config.APP_PORT_HTTPS);
 //app.set('portHttps', portHttps);
