@@ -22,10 +22,12 @@ class BotPersistentData {
             // Tabla logs
             let sqlRes = await sqlite.run(`CREATE TABLE IF NOT EXISTS marketData (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                market INTEGER NOT NULL,
-                windowStart INTEGER NOT NULL,
-                windowEnd INTEGER NOT NULL,
-                indicatorValues TEXT NOT NULL            
+                market TEXT NOT NULL,
+                price REAL NOT NULL,
+                windowStart REAL NOT NULL,
+                windowEnd REAL NOT NULL,
+                indicatorValues TEXT NOT NULL,
+                decision TEXT NOT NULL
             )`);
 
             return {
@@ -46,10 +48,12 @@ class BotPersistentData {
      *   market : "id",
      *   windowStart : 1614933060,
      *   windowEnd : 1614945000,
+     *   price : 34,
      *   indicatorValues : [
      *     { "name" : "DEMA", "period" : 20, "value" : 34 },
      *     { "name" : "DEMA", "period" : 50, "value" : 34 }
-     *   ]
+     *   ],
+     *   decision : "realx"
      * }
      * @param {*} marketId : id del mercat que es recuperarà
      */
@@ -84,10 +88,12 @@ class BotPersistentData {
      *   market : "id",
      *   windowStart : 1614933060,
      *   windowEnd : 1614945000,
+     *   price : 34,
      *   indicatorValues : [
      *     { "name" : "DEMA", "period" : 20, "value" : 34 },
      *     { "name" : "DEMA", "period" : 50, "value" : 34 }
-     *   ]
+     *   ],
+     *   decision : "realx"
      * },...]
      * @param {*} marketId : id del mercat que es recuperarà
      * @param {*} limit : numero màxim de dades que es recuperaran
@@ -127,10 +133,12 @@ class BotPersistentData {
      *   market : "id",
      *   windowStart : 1614933060,
      *   windowEnd : 1614945000,
+     *   price : 34,
      *   indicatorValues : [
      *     { "name" : "DEMA", "period" : 20, "value" : 34 },
      *     { "name" : "DEMA", "period" : 50, "value" : 34 }
-     *   ]
+     *   ],
+     *   decision : "realx"
      * },...]
      * @param {*} marketId : id del mercat que es recuperarà
      * @param {*} limit : numero màxim de dades que es recuperaran
@@ -171,16 +179,18 @@ class BotPersistentData {
      *   market : "id",
      *   windowStart : 1614933060,
      *   windowEnd : 1614945000,
+     *   price : 34,
      *   indicatorValues : [
      *     { "name" : "DEMA", "period" : 20, "value" : 34 },
      *     { "name" : "DEMA", "period" : 50, "value" : 34 }
-     *   ]
+     *   ],
+     *   decision : "realx"
      * }
      */
     saveCurrentMarketData = async function(data) {
         try {
-            let sql = `INSERT INTO marketData (market, windowStart, windowEnd, indicatorValues) 
-                       VALUES ('` + data.market + `',` + data.windowStart + `,` + data.windowEnd + `,'` + JSON.stringify(data.indicatorValues) + `')`;
+            let sql = `INSERT INTO marketData (market, windowStart, windowEnd, price, indicatorValues, decision) 
+                       VALUES ('` + data.market + `',` + data.windowStart + `,` + data.windowEnd + `,` + price + `,'` + JSON.stringify(data.indicatorValues) + `'.'` + decision + `')`;
 
             let result = await sqlite.run(sql);
 

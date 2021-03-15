@@ -132,10 +132,12 @@ router.get('/analysis', async function (req, res, next) {
         //   market : "id",
         //   windowStart : 1614933060,
         //   windowEnd : 1614945000,
+        //   price : 34,
         //   indicatorValues : [
         //     { "name" : "DEMA", "period" : 20, "value" : 34 },
         //     { "name" : "DEMA", "period" : 50, "value" : 34 }
-        //   ]
+        //   ],
+        //   decision : "relax"
         // }]
         let lastData = await botData.getLastMarketDatasAsc(marketId, numberOfValues);
         if (lastData.error.length > 0) {
@@ -188,6 +190,15 @@ router.get('/analysis', async function (req, res, next) {
             }
         }
 
+        // Afegim una altra serie pel preu
+        series.push({
+            "name" : marketId,
+            "data" : [ ],
+            "color" : colors[color],
+            "website" : "",
+            "description" : marketId
+        });
+
         // Creem els arrays de les series inicialitzades a 0
         for (let i = 0; i < series.length; i++) {
             series[i].data = Array(timestamps.length).fill(0);
@@ -198,14 +209,42 @@ router.get('/analysis', async function (req, res, next) {
             // Busquem les dades que corresponguin a aquest timestamp
             let dataFound = lastData.result.filter(o => o.windowEnd === timestampsUnixEpoch[i]);
 
-            // De les dades recuperades mirem a quina sèrie corresponen (comparema amb el nom i period)
-            for (let s = 0; s < series.length; s++) {
-                // De les dades trobades ens quedem amb el primer indicador que pertanyi a la serie
-                for (let j = 0; j < dataFound.length; j++) {
-                    let indicatorFound = dataFound[j].indicatorValues.find(o => (o.name + o.period) === series[s].name);
-                    if (indicatorFound) {
-                        series[s].data[i] = indicatorFound.value;
+            if (dataFound) {
+                // De les dades recuperades mirem a quina sèrie corresponen (comparema amb el nom i period)
+                for (let s = 0; s < series.length; s++) {
+                    // De les dades trobades ens quedem amb el primer indicador que pertanyi a la serie
+                    for (let j = 0; j < dataFound.length; j++) {
+                        let indicatorFound = dataFound[j].indicatorValues.find(o => (o.name + o.period) === series[s].name);
+                        if (indicatorFound) {
+                            series[s].data[i] = indicatorFound.value;
+                        }
                     }
+                }
+
+                // Posem el valor a la sèrie del preu, sempre serà l'últim
+                // Si venem o comprem posem un indicdor especial
+                switch(dataFound[0].decision) {
+                    case "sell":
+                        series[series.length - 1].data[i] = {
+                            y : dataFound[0].price,
+                            marker : { 
+                                //symbol : "url(http://localhost:4300/images/chart-decreasing.png)"
+                                symbol : "url(images/chart-decreasing.png)"
+                            }
+                        }
+                        break;
+                    case "buy":
+                        series[series.length - 1].data[i] = {
+                            y : dataFound[0].price,
+                            marker : { 
+                                //symbol : "url(http://localhost:4300/images/chart-increasing.png)"
+                                symbol : "url(images/chart-increasing.png)"
+                            }
+                        }
+                        break;
+                    default:
+                    series[series.length - 1].data[i] = dataFound[0].price;
+                     break;
                 }
             }
         }

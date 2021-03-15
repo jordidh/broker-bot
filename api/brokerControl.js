@@ -158,15 +158,16 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
  * Retorna una cosa del tipus: {
  *   "error" : [],
  *   "result" : {
- *     "action" : "buy" / "sell" / "relax"
- *     "currentData" : {
+  *     "currentData" : {
  *          market : "id",
  *          windowStart : 1614933060,
  *          windowEnd : 1614945000,
+ *          price : 34,
  *          indicatorValues : [
  *              { "name" : "DEMA", "period" : 20, "value" : 34 },
  *              { "name" : "DEMA", "period" : 50, "value" : 34 }
- *          ]
+ *          ],
+ *          decision : "buy" / "sell" / "relax"
  *      }
  *    }
  * }

@@ -77,8 +77,9 @@ async function checkMarket(markets) {
         // Retorna una cosa del tipus: {
         //   "error" : [],
         //   "result" : {
-        //     "action" : "buy" / "sell" / "relax"
         //     "currentData" : {
+        //       ...
+        //       "decision" : "buy" / "sell" / "relax"
         //   }
         // }
         //let decision = brokerControl[fn](market, lastData);
@@ -92,17 +93,17 @@ async function checkMarket(markets) {
             return;
         }
 
-        if (decision.result.action !== "relax") {
+        if (decision.result.currentData.decision !== "relax") {
             // Enviem post als bots
             //market.tradingBots.forEach(bot => {
             //    // Fem post
-            //    let postResult = await brokerControl.postToTradingBot(bot, decision.action);
+            //    let postResult = await brokerControl.postToTradingBot(bot, decision.result.currentData.decision);
             //});
 
             // Fem un post en paralel
             await Promise.all(market.tradingBots.map(async (bot) => {
                 // Fem post
-                let postResult = await brokerControl.postToTradingBot(bot, decision.result.action);
+                let postResult = await brokerControl.postToTradingBot(bot, decision.result.currentData.decision);
                 if (postResult && postResult.error && postResult.error.length > 0) {
                     logger.error("checking markets, error posting to bot " + bot.url + ": " + postResult.error[0]);
                 } else {
