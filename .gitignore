@@ -106,3 +106,4 @@ dist
 # Custom ignores
 config/env/
 .vscode/
+database/
