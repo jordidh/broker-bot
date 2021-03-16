@@ -219,7 +219,7 @@ exports.checkAndDecide = async function(market, lastData, prices) {
     let action = "relax";
 
     // Si lastData té valor comparem per determinar quina acció prenem
-    if (lastData) {
+    if (lastData && lastData.indicatorValues && Array.isArray(lastData.indicatorValues) && lastData.indicatorValues.length > 1) {
         // Algoritme de decisió
         // Suposem que compararem amb DEMA(10) i DEMA(20) 
         // Si DEMA(20) passa de sota a sobre de DEMA(10) venem, si passa de sobre a sota comprem.
@@ -245,6 +245,8 @@ exports.checkAndDecide = async function(market, lastData, prices) {
                 action = "buy";
             }
         }
+    } else {
+        console.error("brokerControl.checkAndDecide : lastData wit incorrect format");
     }
 
     currentData.decision = action;
