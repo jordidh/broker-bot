@@ -11,10 +11,12 @@ block content
 
   p Page to show the configuration of each market. Allows test the communication with the trading bot
 
+  h2 Checking market at #{config.schedule}
+
   div
-    if markets
+    if config.markets
       ul
-      each market, i in markets
+      each market, i in config.markets
         li 
           b Market #{market.id} - Extracts data from #{market.api}
           if market.tradingBots

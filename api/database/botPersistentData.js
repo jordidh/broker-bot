@@ -190,7 +190,12 @@ class BotPersistentData {
     saveCurrentMarketData = async function(data) {
         try {
             let sql = `INSERT INTO marketData (market, windowStart, windowEnd, price, indicatorValues, decision) 
-                       VALUES ('` + data.market + `',` + data.windowStart + `,` + data.windowEnd + `,` + price + `,'` + JSON.stringify(data.indicatorValues) + `'.'` + decision + `')`;
+                       VALUES ('` + data.market + `',` + 
+                                    data.windowStart + `,` + 
+                                    data.windowEnd + `,` + 
+                                    data.price + `,'` + 
+                                    JSON.stringify(data.indicatorValues) + `','` + 
+                                    data.decision + `')`;
 
             let result = await sqlite.run(sql);
 

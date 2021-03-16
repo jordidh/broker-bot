@@ -23,7 +23,8 @@ router.get('/', function (req, res, next) {
     // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-    logger.info(reqId + `: Rebut GET des de ` + ip);
+    var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
 
     try {
         res.render('index', { name: pjson.name, version: pjson.version});
@@ -39,7 +40,8 @@ router.get('/dashboard', function (req, res, next) {
     // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-    logger.info(reqId + `: Rebut GET des de ` + ip);
+    var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
 
     try {
         res.render('dashboard', { name: pjson.name, version: pjson.version, views: config.dashboard.views });
@@ -56,10 +58,11 @@ router.get('/markets', function (req, res, next) {
     // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-    logger.info(reqId + `: Rebut GET des de ` + ip);
+    var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
 
     try {
-        res.render('markets', { name: pjson.name, version: pjson.version, markets : config.jobs.checkMarkets.markets });
+        res.render('markets', { name: pjson.name, version: pjson.version, config : config.jobs.checkMarkets });
     } catch (e) {
         logger.error(e);
         res.render('markets', { name: pjson.name, version: pjson.version, m_alert: e.message });
@@ -76,7 +79,8 @@ router.get('/analysis', async function (req, res, next) {
     // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
     var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-    logger.info(reqId + `: Rebut GET des de ` + ip);
+    var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
 
     let dataToShow = {
         "title" : "Analysis",

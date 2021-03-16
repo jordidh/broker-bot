@@ -186,6 +186,8 @@ exports.checkAndDecide = async function(market, lastData, prices) {
     // Configurem el resultat amb les dades que tenim actualment
     let currentData = {
         market : market.id,
+        price  : 0,
+        decision : "relax",
         windowStart : (lastData && lastData.windowEnd ? lastData.windowEnd : 0),
         windowEnd : Math.floor(new Date().getTime() / 1000),
         indicatorValues : []  // faltarà posar valors als indicadors
@@ -245,10 +247,14 @@ exports.checkAndDecide = async function(market, lastData, prices) {
         }
     }
 
+    currentData.decision = action;
+    if (prices && Array.isArray(prices) && prices.length > 0) {
+        currentData.price = prices[prices.length -1][4];
+    }
+
     return {
         "error" : [ ],
         "result" : {
-            "action" : action,
             "currentData" : currentData
         }
     }
