@@ -234,15 +234,21 @@ exports.checkAndDecide = async function(market, lastData, prices) {
             }
         }
 
+        // Suposem que el lastData.indicatorValues[0] és DEMA(10) i el lastData.indicatorValues[1] és el DEMA(20)
         let lastValuesDiff = lastData.indicatorValues[0].value - lastData.indicatorValues[1].value;
         let currentValuesDiff = currentData.indicatorValues[0].value - currentData.indicatorValues[1].value;
         // Cas 1: els valors anterior i actual tenen el mateix signe o tots dos són 0, no fem res, deixem action = "relax"
-        // Cas 2: si són diferents mirem quin és negatiu i quin positiu
+        // Cas 2: si són diferents mirem quin és negatiu i quin positiu 
+        //        Explicació: el DEMA(10) reacciona mes ràpid que el 20, per tant si puja comprem si baixa venem
+        //        Quan el DEMA(10) passa per sobre del DEMA(20) => comprem
+        //        Quan el DEMA(10) passa per sota del DEMA(20) => venem
         if (Math.sign(lastValuesDiff) != Math.sign(currentValuesDiff)) {
-            if (Math.sign(lastValuesDiff) < Math.sign(currentValuesDiff)) {
-                action = "sell";
-            } else {
+            if (Math.sign(lastValuesDiff) < Math.sign(currentValuesDiff)) {   
+                // Anteriorment DEMA(10) estava per sota i ara per sobre => comprem
                 action = "buy";
+            } else {
+                // Anteriorment DEMA(10) estava per sobre i ara per sota => venem
+                action = "sell";
             }
         }
     } else {
