@@ -12,9 +12,9 @@ const expect    = require("chai").expect;
 const brokerControl = require('../../api/brokerControl');
 
 
-describe('Broker Indexes, SimpleMovingAverage', () =>  {
+describe('BrokerControl.applyIndicator()', () =>  {
     it('calculates SMA successfully', async () => {
-        let prices = [
+        const prices = [
             [1, 168, 0, 0],
             [2, 170, 0, 0],
             [3, 171, 0, 0],
@@ -57,15 +57,13 @@ describe('Broker Indexes, SimpleMovingAverage', () =>  {
             ]
         };
 
-        var result = await brokerControl.applyIndicator(prices, "SMA", 8, 0, 1);
+        let result = await brokerControl.applyIndicator(prices, "SMA", 8, 0, 1);
 
         expect(result).to.deep.equal(smaExpected);
     });
-});
 
-describe('Broker Indexes, ExponentialMovingAverage', () =>  {
     it('calculates EMA successfully', async () => {
-        let prices = [
+        const prices = [
             [1, 168, 0, 0],
             [2, 170, 0, 0],
             [3, 171, 0, 0],
@@ -108,15 +106,13 @@ describe('Broker Indexes, ExponentialMovingAverage', () =>  {
             ]
         };
 
-        var result = await brokerControl.applyIndicator(prices, "EMA", 8, 0, 1);
+        let result = await brokerControl.applyIndicator(prices, "EMA", 8, 0, 1);
 
         expect(result).to.deep.equal(emaExpected);
     });
-});
 
-describe('Broker Indexes, DoubleExponentialMovingAverage', () =>  {
     it('calculates DEMA successfully', async () => {
-        let prices = [
+        const prices = [
             // time, price, 0, 0
             [1, 41394.07, 0, 0],
             [2, 41266.42, 0, 0],
@@ -166,8 +162,73 @@ describe('Broker Indexes, DoubleExponentialMovingAverage', () =>  {
             ]
         };
 
-        var result = await brokerControl.applyIndicator(prices, "DEMA", 10, 0, 1);
+        let result = await brokerControl.applyIndicator(prices, "DEMA", 10, 0, 1);
         
         expect(result).to.deep.equal(demaExpected);
+    });
+});
+
+describe('BrokerControl.analizeStrategy()', () => {
+    it('calculates one buy and one sell with 10€ of profit', async () => {
+        const analysisBatchNumber = "Proves-0001";
+        const analysisId = 1;
+        const funds = 1000;   // €
+        const comission = [ 2, 4];  // comprar 2%, vendre 4%
+        const market = {
+            "id" : "BTC",
+            "api" : "",  // pel test no es fa servir
+            "strategy" : "",
+            "decisionWindow" : "",
+            "indicator" : [
+                { "name" : "DEMA", "period" : 10 },
+                { "name" : "DEMA", "period" : 20 }
+            ],
+            "tradingBots" : [ ]  // pel test no es fa servir
+        };
+        const prices = [     // cada element ha de ser un array del tipus [ unixtime, obertura, màxim, mínim, tancament ]
+            [1614791800, 0, 0, 0, 166],   // Dades inicials per omplir els DEMA. GMT: Wednesday 3 March 2021 17:16:40 
+            [1614792800, 0, 0, 0, 166],   
+            [1614793800, 0, 0, 0, 166],   
+            [1614794800, 0, 0, 0, 166],   
+            [1614795800, 0, 0, 0, 166],   
+            [1614796800, 0, 0, 0, 166],   
+            [1614797800, 0, 0, 0, 166],   
+            [1614798800, 0, 0, 0, 166],   
+            [1614799800, 0, 0, 0, 166],   
+            [1614800800, 0, 0, 0, 166],   
+            [1614801800, 0, 0, 0, 166],   
+            [1614802800, 0, 0, 0, 166],   
+            [1614803800, 0, 0, 0, 166],   
+            [1614804800, 0, 0, 0, 166],   
+            [1614805800, 0, 0, 0, 166],   
+            [1614806800, 0, 0, 0, 166],   
+            [1614807800, 0, 0, 0, 166],   
+            [1614808800, 0, 0, 0, 166],   
+            [1614809800, 0, 0, 0, 166],   
+            [1614810800, 0, 0, 0, 166],   
+            [1614811800, 0, 0, 0, 166],   // GMT: Wednesday 3 March 2021 22:50:00
+            [1614812800, 0, 0, 0, 166],   // GMT: Wednesday 3 March 2021 23:06:40
+            [1614813800, 0, 0, 0, 166],
+            [1614814800, 0, 0, 0, 166],
+            [1614815800, 0, 0, 0, 168],   // Comença a pujar => comprar
+            [1614816800, 0, 0, 0, 170],
+            [1614817800, 0, 0, 0, 172],
+            [1614818800, 0, 0, 0, 174],
+            [1614819800, 0, 0, 0, 176],
+            [1614820800, 0, 0, 0, 178],
+            [1614821800, 0, 0, 0, 180],
+            [1614822800, 0, 0, 0, 183],
+            [1614823800, 0, 0, 0, 187],
+            [1614824800, 0, 0, 0, 192],
+            [1614825800, 0, 0, 0, 190],
+            [1614826800, 0, 0, 0, 187],   // Comença a baixar => vendre
+            [1614827800, 0, 0, 0, 180],
+            [1614828800, 0, 0, 0, 170],
+            [1614829800, 0, 0, 0, 160]    // GMT: Thursday 4 March 2021 3:50:
+        ];
+
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
+
+        console.log(result);
     });
 });

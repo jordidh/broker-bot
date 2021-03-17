@@ -368,3 +368,143 @@ exports.postToTradingBot = async function(bot, action) {
         }
     }
 }
+
+/**
+ * Funció que a partir d'un llistat de preus i una configuració
+ * de mercat analitza l'estratègia especificada en el mercat sobre
+ * dels preus i retorna el benefici que s'obtindria.
+ * Es guarda a la BD la seqüència de decisions preses per poder
+ * mostrar-ho gràficament
+ * @param {*} analysisBatchNumber : número que identificarà el conjunt 
+ *                   d'anàlisis realitzats del que aquest formarà part
+ * @param {*} analysisId : identificador de l'anlàsisi dins del conjunt 
+ *                   d'anàlisis que es realitzaran
+ * @param {*} funds : quantitat de € que es fa servir per la compra inicial
+ * @param {*} comission : [ 1%, 2% ] quantitat que es queda l'exchange per cada compra o venda
+ * @param {*} market : {} objecte amb la definició del mercat, tal i com apareix al config
+ * @param {*} prices : [] matriu amb els preus
+ * Retorna un array de resultats del tipus:
+ * {
+ *   "error" : [],
+ *   "result" : {
+ *      data: [{
+ *          market : "id",
+ *          windowStart : 1614933060,
+ *          windowEnd : 1614945000,
+ *          price : 34,
+ *          indicatorValues : [
+ *              { "name" : "DEMA", "period" : 20, "value" : 34 },
+ *              { "name" : "DEMA", "period" : 50, "value" : 34 }
+ *          ],
+ *          decision : "buy" / "sell" / "relax",
+ *          volume : , // Valor NOU, guarda el volum comprat (€ compra / preu moment de la compra)
+ *          volumePrice :   // Valor NOU, guarda el preu de la cripto comprada en aquest moment
+ *      }, ... ],
+ *      funds : 100,     // € a l'inici del domini
+ *      result : 110,    // € al final de l'anàlisi
+ *      comission : 5,   // comissió total
+ *      profit : 5       // benefici total
+ *   }
+ * }
+ */
+exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds, comission, market, prices) {
+    try {
+        let result = {
+            "error" : [],
+            "result" : {
+                "data" : [],
+                "funds" : funds,
+                "result" : 0,
+                "comission" : 0,
+                "profit" : 0
+            } 
+        };
+
+        // Busquem el període mes gran dels indicadors, aquest ens dirà a partir de quin
+        // punt hem de començar a analitzar els prices (eld DEMA necessiten X dades previes)
+        // P.e.: Si tenim un array de 50 prices i els indicadors que fem servir són DEMA 10 i DEMA 20
+        // començarem a calcular al array número 20 de prices i l'aplicarem fins arrivar al final,
+        // per tant farem 30 execucions de la funció checkAndDecide, cada cop amb un valor mes al
+        // array de prices
+        let maxPeriod = 0;
+        for (let i = 0; i < market.indicator.length; i++) {
+            if (market.indicator[i].period > maxPeriod) {
+                maxPeriod = market.indicator[i].period;
+            }
+        }
+
+        if (prices.length <= period) {
+            return {
+                "error" : [ "Error, the prices length must be greater than the max period"],
+                "result" : null
+            }
+        }
+
+        // Executem el checkAndDecide per cada price i guardem les dades resultants
+        // per analitzarles posteriorment
+        for (let i = maxPeriod; i < pricess.length; i++) {
+            let partialPrices = prices.slice(0, i);
+
+            // Executem la funció amb les dades recuperades que ha de decidir que fer, si comprar, vendre o res
+            // Retorna una cosa del tipus: {
+            //   "error" : [],
+            //   "result" : {
+            //     "currentData" : {
+            //       ...
+            //       "decision" : "buy" / "sell" / "relax"
+            //   }
+            // }
+            //let decision = brokerControl[fn](market, lastData);
+            let decision = await brokerControl.checkAndDecide(market, lastData.result, partialPrices);
+            if (decision.error.length > 0) {
+                console.error("Error in checkAndDecide " + decision.error[0]);
+                return decision;
+            }
+
+            // Calculem beneficis
+            switch (decision.result.currentData.decision) {
+                case "relax":
+                    // Calculem el preu del volum comprat en aquest moment
+                    // El volum es manté constant però el preu canvia
+                    decision.result.currentData.volume = lastData.volume;
+                    decision.result.currentData.volumePrice = lastData.volume / currentData.price;
+                    break;
+                case "buy":
+                    // Valor NOU, calculem el preu, sense la comissió de compra
+                    // El primer cop que comprem tindrem els € per comprar cripto a funds
+                    // A partir de la primera venda els € resultants els tindrem a result
+                    let p = (result.result.resul === 0 ? result.result.funds : result.result.result);
+                    decision.result.currentData.volumePrice = p - (p * comission[0] / 100);
+                    // Valor NOU, calculem el volum comprat
+                    decision.result.currentData.volume = decision.result.currentData.volumePrice / decision.result.currentData.price;
+
+                    // El posem a 0 ja que hem comprat crypto i ja no tenim €
+                    result.result.result = 0;
+                    break;
+                case "sell":
+                    // Apliquem comissió de venda i calculem el resultat iel posem a funds
+                    let p = decision.result.currentData.volume * decision.result.currentData.price;
+                    // Treiem la comissió
+                    result.result.result = p - (p * comission[1] / 100);
+
+                    // Ja no tem currency per tant el volum és 0 i el volumePrice també
+                    decision.result.currentData.volume = 0;
+                    decision.result.currentData.volumePrice = 0;
+                    break;
+            }
+
+            // Emmagatzemem les dades obtingudes
+            result.result.data.push(decision.result.currentData);
+        }
+
+        return {
+            "error" : [ ],
+            "result" : result
+        }
+    } catch (e) {
+        return {
+            "error" : [ "Exception analizing strategy ", e.message ],
+            "result" : null
+        }
+    }
+}
