@@ -27,10 +27,10 @@ router.get('/', function (req, res, next) {
     logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
 
     try {
-        res.render('index', { name: pjson.name, version: pjson.version});
+        res.render('index', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL });
     } catch (e) {
         logger.error(e);
-        res.render('index', { name: pjson.name, version: pjson.version, m_alert: e.message });
+        res.render('index', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, m_alert: e.message });
     }
 });
 
@@ -44,10 +44,10 @@ router.get('/dashboard', function (req, res, next) {
     logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
 
     try {
-        res.render('dashboard', { name: pjson.name, version: pjson.version, views: config.dashboard.views });
+        res.render('dashboard', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, views: config.dashboard.views });
     } catch (e) {
         logger.error(e);
-        res.render('dashboard', { name: pjson.name, version: pjson.version, m_alert: e.message });
+        res.render('dashboard', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, m_alert: e.message });
     }
 });
 
@@ -62,10 +62,10 @@ router.get('/markets', function (req, res, next) {
     logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
 
     try {
-        res.render('markets', { name: pjson.name, version: pjson.version, config : config.jobs.checkMarkets });
+        res.render('markets', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, config : config.jobs.checkMarkets });
     } catch (e) {
         logger.error(e);
-        res.render('markets', { name: pjson.name, version: pjson.version, m_alert: e.message });
+        res.render('markets', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, m_alert: e.message });
     }
 });
 
@@ -118,6 +118,7 @@ router.get('/analysis', async function (req, res, next) {
                 return res.render('analysis', { 
                     name: pjson.name, 
                     version: pjson.version, 
+                    baseUrl : config.APP_CLIENT_BASE_URL,
                     data : dataToShow,
                     m_alert: "No data found calling botData.getMarkets: " + markets.error[0] 
                 });
@@ -149,6 +150,7 @@ router.get('/analysis', async function (req, res, next) {
             return res.render('analysis', { 
                 name: pjson.name, 
                 version: pjson.version, 
+                baseUrl : config.APP_CLIENT_BASE_URL,
                 data : dataToShow,
                 m_alert: "No data found calling getLastMarketDatasAsc: " + lastData.error[0] 
             });
@@ -260,11 +262,12 @@ router.get('/analysis', async function (req, res, next) {
         res.render('analysis', { 
             name: pjson.name, 
             version: pjson.version,
+            baseUrl : config.APP_CLIENT_BASE_URL,
             data : dataToShow
         });
     } catch (e) {
         logger.error(e);
-        res.render('analysis', { name: pjson.name, version: pjson.version, m_alert: e.message, data : dataToShow });
+        res.render('analysis', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, m_alert: e.message, data : dataToShow });
     }
 });
 

@@ -61,6 +61,7 @@ El fitxer de configuració ha de tenir la següent estructura:
 ```
 {
     "APP_PORT_HTTP": "4300",
+    "APP_CLIENT_BASE_URL": "/boker/jordi",  // part de la URL de client per quan es rescriu la URL amb nginx
     "jobs" : {
         "checkMarkets": {   
             "name": "checkMarkets",

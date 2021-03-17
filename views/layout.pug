@@ -17,13 +17,13 @@ html
         nav
             ul.topnav
                 li
-                    a(href='/') &Iacute;ndex
+                    a(href=baseUrl + '/') &Iacute;ndex
                 li
-                    a(href='/dashboard') Dashboard
+                    a(href=baseUrl + '/dashboard') Dashboard
                 li
-                    a(href='/markets') Markets Configuration
+                    a(href=baseUrl + '/markets') Markets Configuration
                 li
-                    a(href='/analysis') Markets Analysis
+                    a(href=baseUrl + '/analysis') Markets Analysis
 
         div
             if (msgAlert)
