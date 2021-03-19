@@ -210,7 +210,7 @@ describe('BrokerControl.analizeStrategy()', () => {
             [1614812800, 0, 0, 0, 166],   // GMT: Wednesday 3 March 2021 23:06:40
             [1614813800, 0, 0, 0, 166],
             [1614814800, 0, 0, 0, 166],
-            [1614815800, 0, 0, 0, 168],   // Comença a pujar => comprar
+            [1614815800, 0, 0, 0, 168],   // Comença a pujar => Aquí ens adonarem que s'han creuat els DEMA i comprarem
             [1614816800, 0, 0, 0, 170],
             [1614817800, 0, 0, 0, 172],
             [1614818800, 0, 0, 0, 174],
@@ -223,12 +223,46 @@ describe('BrokerControl.analizeStrategy()', () => {
             [1614825800, 0, 0, 0, 190],
             [1614826800, 0, 0, 0, 187],   // Comença a baixar => vendre
             [1614827800, 0, 0, 0, 180],
-            [1614828800, 0, 0, 0, 170],
+            [1614828800, 0, 0, 0, 170],   // <--- Aquí ens adonarem que s'han creuat els DEMA i vendrem
             [1614829800, 0, 0, 0, 160]    // GMT: Thursday 4 March 2021 3:50:
         ];
+        const expectedResult = {
+            "error" : [],
+            "result" : {
+                "data" : [
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":166},{"name":"DEMA","period":20,"value":166}],"market":"BTC","price":166,"volume":0,"buyPrice":0,"windowEnd":1614811800,"windowStart":0},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":166},{"name":"DEMA","period":20,"value":166}],"market":"BTC","price":166,"volume":0,"buyPrice":0,"windowEnd":1614812800,"windowStart":1614811800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":166},{"name":"DEMA","period":20,"value":166}],"market":"BTC","price":166,"volume":0,"buyPrice":0,"windowEnd":1614813800,"windowStart":1614812800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":166},{"name":"DEMA","period":20,"value":166}],"market":"BTC","price":166,"volume":0,"buyPrice":0,"windowEnd":1614814800,"windowStart":1614813800},
+                    {"decision":"buy","indicatorValues":[{"name":"DEMA","period":10,"value":166.6611570247934},{"name":"DEMA","period":20,"value":166.36281179138322}],"market":"BTC","price":168,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614815800,"windowStart":1614814800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":167.809166040571},{"name":"DEMA","period":20,"value":167.03746895583632}],"market":"BTC","price":170,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614816800,"windowStart":1614815800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":169.31124923160985},{"name":"DEMA","period":20,"value":167.97942215434927}],"market":"BTC","price":172,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614817800,"windowStart":1614816800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":171.0668173435744},{"name":"DEMA","period":20,"value":169.14977910683405}],"market":"BTC","price":174,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614818800,"windowStart":1614817800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":173.0001541013829},{"name":"DEMA","period":20,"value":170.51463113272897}],"market":"BTC","price":176,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614819800,"windowStart":1614818800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":175.05469675408503},{"name":"DEMA","period":20,"value":172.04445665839145}],"market":"BTC","price":178,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614820800,"windowStart":1614819800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":177.1885741743539},{"name":"DEMA","period":20,"value":173.7135931394132}],"market":"BTC","price":180,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614821800,"windowStart":1614820800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":179.70171280529902},{"name":"DEMA","period":20,"value":175.68117567249982}],"market":"BTC","price":183,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614822800,"windowStart":1614821800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":182.81541014319458},{"name":"DEMA","period":20,"value":178.08383461071813}],"market":"BTC","price":187,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614823800,"windowStart":1614822800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":186.69101215804383},{"name":"DEMA","period":20,"value":181.03853877909438}],"market":"BTC","price":192,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614824800,"windowStart":1614823800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":188.7997701297018},{"name":"DEMA","period":20,"value":183.19385408446277}],"market":"BTC","price":190,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614825800,"windowStart":1614824800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":189.25935951140005},{"name":"DEMA","period":20,"value":184.47569854908892}],"market":"BTC","price":187,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614826800,"windowStart":1614825800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":187.17827936158153},{"name":"DEMA","period":20,"value":184.27806375891586}],"market":"BTC","price":180,"volume":5.833333333333333,"buyPrice":980,"windowEnd":1614827800,"windowStart":1614826800},
+                    {"decision":"sell","indicatorValues":[{"name":"DEMA","period":10,"value":182.2420759766094},{"name":"DEMA","period":20,"value":182.2634188285573}],"market":"BTC","price":170,"volume":0,"buyPrice":0,"windowEnd":1614828800,"windowStart":1614827800},
+                    {"decision":"relax","indicatorValues":[{"name":"DEMA","period":10,"value":175.22719351306247},{"name":"DEMA","period":20,"value":178.68895058553306}],"market":"BTC","price":160,"volume":0,"buyPrice":0,"windowEnd":1614829800,"windowStart":1614828800}
+                ],
+                "fundsBegin" : 1000,
+                "fundsEnd" : 952,
+                "comission" : 59.666666666666664,
+                "profit" : -48,
+                "analysisBatchNumber" : analysisBatchNumber,
+                "analysisId" : analysisId
+            } 
+        };
 
         let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
 
-        console.log(result);
+        //console.log(result);
+
+        expect(result).to.deep.equal(expectedResult);
     });
 });

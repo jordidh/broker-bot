@@ -189,7 +189,7 @@ exports.checkAndDecide = async function(market, lastData, prices) {
         price  : 0,
         decision : "relax",
         windowStart : (lastData && lastData.windowEnd ? lastData.windowEnd : 0),
-        windowEnd : Math.floor(new Date().getTime() / 1000),
+        windowEnd : prices[prices.length - 1][0], // Math.floor(new Date().getTime() / 1000),
         indicatorValues : []  // faltarà posar valors als indicadors
     }
 
@@ -252,7 +252,7 @@ exports.checkAndDecide = async function(market, lastData, prices) {
             }
         }
     } else {
-        console.error("brokerControl.checkAndDecide : lastData wit incorrect format");
+        console.error("brokerControl.checkAndDecide : lastData with incorrect format");
     }
 
     currentData.decision = action;
@@ -398,26 +398,27 @@ exports.postToTradingBot = async function(bot, action) {
  *          ],
  *          decision : "buy" / "sell" / "relax",
  *          volume : , // Valor NOU, guarda el volum comprat (€ compra / preu moment de la compra)
- *          volumePrice :   // Valor NOU, guarda el preu de la cripto comprada en aquest moment
+ *          buyPrice :   // Valor NOU, guarda l'últim preu de compra, per poder calcular el benefici
  *      }, ... ],
- *      funds : 100,     // € a l'inici del domini
- *      result : 110,    // € al final de l'anàlisi
- *      comission : 5,   // comissió total
- *      profit : 5       // benefici total
+ *      funds : 100,        // € a l'inici del domini
+ *      result : 110,       // € al final de l'anàlisi
+ *      comission : 5,      // comissió total, es sumen les comissions aplicades a cada operació
+ *      profit : 5,         // benefici total, es sumen els beneficis de cada operació
+ *      analysisBatchNumber: "", // identificador del procés d'anàlisis
+ *      analysisId: 1       // id de l'anàlisi
  *   }
  * }
  */
 exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds, comission, market, prices) {
     try {
         let result = {
-            "error" : [],
-            "result" : {
-                "data" : [],
-                "funds" : funds,
-                "result" : 0,
-                "comission" : 0,
-                "profit" : 0
-            } 
+            "data" : [],
+            "fundsBegin" : funds,
+            "fundsEnd" : 0,
+            "comission" : 0,
+            "profit" : 0,
+            "analysisBatchNumber" : analysisBatchNumber,
+            "analysisId" : analysisId
         };
 
         // Busquem el període mes gran dels indicadors, aquest ens dirà a partir de quin
@@ -433,17 +434,20 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
             }
         }
 
-        if (prices.length <= period) {
+        if (prices.length <= maxPeriod) {
             return {
                 "error" : [ "Error, the prices length must be greater than the max period"],
                 "result" : null
             }
         }
 
+        // Inicialitzem el valor de lastData
+        let lastData = { };
+
         // Executem el checkAndDecide per cada price i guardem les dades resultants
         // per analitzarles posteriorment
-        for (let i = maxPeriod; i < pricess.length; i++) {
-            let partialPrices = prices.slice(0, i);
+        for (let i = maxPeriod; i < prices.length; i++) {
+            let partialPrices = prices.slice(0, i+1); // Nota: La posició final (contant des de zero) en la qual finalitzarà l'extracció. slice extraurà fins a aquesta posicó, sense incloure-la.
 
             // Executem la funció amb les dades recuperades que ha de decidir que fer, si comprar, vendre o res
             // Retorna una cosa del tipus: {
@@ -455,46 +459,64 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
             //   }
             // }
             //let decision = brokerControl[fn](market, lastData);
-            let decision = await brokerControl.checkAndDecide(market, lastData.result, partialPrices);
+            let decision = await this.checkAndDecide(market, lastData, partialPrices);
             if (decision.error.length > 0) {
                 console.error("Error in checkAndDecide " + decision.error[0]);
                 return decision;
             }
 
+            //console.log(decision);
+
             // Calculem beneficis
             switch (decision.result.currentData.decision) {
                 case "relax":
-                    // Calculem el preu del volum comprat en aquest moment
-                    // El volum es manté constant però el preu canvia
-                    decision.result.currentData.volume = lastData.volume;
-                    decision.result.currentData.volumePrice = lastData.volume / currentData.price;
+                    // El volum es manté constant
+                    decision.result.currentData.volume = (lastData.volume ? lastData.volume : 0);
+                    // Passem el preu de l'última compra
+                    decision.result.currentData.buyPrice = (lastData.buyPrice ? lastData.buyPrice : 0);
                     break;
                 case "buy":
                     // Valor NOU, calculem el preu, sense la comissió de compra
                     // El primer cop que comprem tindrem els € per comprar cripto a funds
                     // A partir de la primera venda els € resultants els tindrem a result
-                    let p = (result.result.resul === 0 ? result.result.funds : result.result.result);
-                    decision.result.currentData.volumePrice = p - (p * comission[0] / 100);
+                    let buyPrice = (result.fundsEnd === 0 ? result.fundsBegin : result.fundsEnd);
+                    let buyComission = (buyPrice * comission[0] / 100);
+                    let buyPriceWithOutCommission = buyPrice - buyComission;
+                    // Sumem la comissió actual a les totals
+                    result.comission += buyComission;
                     // Valor NOU, calculem el volum comprat
-                    decision.result.currentData.volume = decision.result.currentData.volumePrice / decision.result.currentData.price;
+                    decision.result.currentData.volume = buyPriceWithOutCommission / decision.result.currentData.price;
+                    decision.result.currentData.buyPrice = buyPriceWithOutCommission;
 
                     // El posem a 0 ja que hem comprat crypto i ja no tenim €
-                    result.result.result = 0;
+                    result.fundsEnd = 0;
                     break;
                 case "sell":
                     // Apliquem comissió de venda i calculem el resultat iel posem a funds
-                    let p = decision.result.currentData.volume * decision.result.currentData.price;
+                    let sellPrice = (lastData.volume ? lastData.volume : 0) * decision.result.currentData.price;
+                    let sellComission = (sellPrice * comission[1] / 100);
                     // Treiem la comissió
-                    result.result.result = p - (p * comission[1] / 100);
+                    result.fundsEnd = sellPrice - sellComission;
+                    // Sumem la comissió actual a les totals
+                    result.comission += sellComission;
+                    // Sumem el benefici al total
+                    //result.profit += (result.fundsEnd - (lastData.buyPrice ? lastData.buyPrice : 0));
+                    result.profit += (result.fundsEnd - result.fundsBegin);
 
-                    // Ja no tem currency per tant el volum és 0 i el volumePrice també
+                    // Ja no temim currency per tant el volum és 0 i el preu de l'última compra també
                     decision.result.currentData.volume = 0;
-                    decision.result.currentData.volumePrice = 0;
+                    decision.result.currentData.buyPrice = 0;
+
+                    //console.log(result);
+
                     break;
             }
 
             // Emmagatzemem les dades obtingudes
-            result.result.data.push(decision.result.currentData);
+            result.data.push(decision.result.currentData);
+
+            // Guardem l'últim valor calculat per la següent iteració
+            lastData = decision.result.currentData;
         }
 
         return {
@@ -503,8 +525,8 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
         }
     } catch (e) {
         return {
-            "error" : [ "Exception analizing strategy ", e.message ],
-            "result" : null
+            "error" : [ "Exception analizing strategy " + e.message ],
+            "result" : e
         }
     }
 }
