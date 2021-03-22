@@ -121,7 +121,7 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
  * {
  *     "id" : "BTC",
  *     "api" : "https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=5",
- *     "strategy" : "",
+ *     "strategy" : "",    // nom de l'estrategia de decisió que aplicarem: p.e. "demax2"
  *     "decisionWindow" : "",
  *     "indicator" : [
  *         { "name" : "DEMA", "period" : 20 },
@@ -220,39 +220,52 @@ exports.checkAndDecide = async function(market, lastData, prices) {
 
     // Si lastData té valor comparem per determinar quina acció prenem
     if (lastData && lastData.indicatorValues && Array.isArray(lastData.indicatorValues) && lastData.indicatorValues.length > 1) {
-        // Algoritme de decisió
-        // Suposem que compararem amb DEMA(10) i DEMA(20) 
-        // Si DEMA(20) passa de sota a sobre de DEMA(10) venem, si passa de sobre a sota comprem.
 
-        // Validem que siguin 2 índex, tots dos iguals i un amb un intervalmes gran que l'altre
-        if (market.indicator.length != 2 || 
-            market.indicator[0].name != market.indicator[1].name &&
-            market.indicator[0].period >= market.indicator[1].period) {
-            return {
-                "error" : [ "indicators incorrect, must have 2, with the same name and the period of the 2n must be grater than the first" ],
-                "result" : null
-            }
+        switch(market.strategy) {
+            case "demax2":
+                // Algoritme de decisió
+                // Suposem que compararem amb DEMA(10) i DEMA(20) 
+                // Si DEMA(20) passa de sota a sobre de DEMA(10) venem, si passa de sobre a sota comprem.
+
+                // Validem que siguin 2 índex, tots dos iguals i un amb un intervalmes gran que l'altre
+                if (market.indicator.length != 2 || 
+                    market.indicator[0].name != market.indicator[1].name ||
+                    market.indicator[0].name != "DEMA" ||
+                    market.indicator[0].period >= market.indicator[1].period) {
+                    return {
+                        "error" : [ "indicators incorrect, strategy demax2 must have 2, with the same name and the period of the 2n must be grater than the first" ],
+                        "result" : { }
+                    }
+                }
+
+                // Suposem que el lastData.indicatorValues[0] és DEMA(10) i el lastData.indicatorValues[1] és el DEMA(20)
+                let lastValuesDiff = lastData.indicatorValues[0].value - lastData.indicatorValues[1].value;
+                let currentValuesDiff = currentData.indicatorValues[0].value - currentData.indicatorValues[1].value;
+                // Cas 1: els valors anterior i actual tenen el mateix signe o tots dos són 0, no fem res, deixem action = "relax"
+                // Cas 2: si són diferents mirem quin és negatiu i quin positiu 
+                //        Explicació: el DEMA(10) reacciona mes ràpid que el 20, per tant si puja comprem si baixa venem
+                //        Quan el DEMA(10) passa per sobre del DEMA(20) => comprem
+                //        Quan el DEMA(10) passa per sota del DEMA(20) => venem
+                if (Math.sign(lastValuesDiff) != Math.sign(currentValuesDiff)) {
+                    if (Math.sign(lastValuesDiff) < Math.sign(currentValuesDiff)) {   
+                        // Anteriorment DEMA(10) estava per sota i ara per sobre => comprem
+                        action = "buy";
+                    } else {
+                        // Anteriorment DEMA(10) estava per sobre i ara per sota => venem
+                        action = "sell";
+                    }
+                }
+                break;
+            default: 
+                return {
+                    "error" : [ "strategy \"" + market.strategy + "\" incorrect or not implemented" ],
+                    "result" : { }
+                }
         }
 
-        // Suposem que el lastData.indicatorValues[0] és DEMA(10) i el lastData.indicatorValues[1] és el DEMA(20)
-        let lastValuesDiff = lastData.indicatorValues[0].value - lastData.indicatorValues[1].value;
-        let currentValuesDiff = currentData.indicatorValues[0].value - currentData.indicatorValues[1].value;
-        // Cas 1: els valors anterior i actual tenen el mateix signe o tots dos són 0, no fem res, deixem action = "relax"
-        // Cas 2: si són diferents mirem quin és negatiu i quin positiu 
-        //        Explicació: el DEMA(10) reacciona mes ràpid que el 20, per tant si puja comprem si baixa venem
-        //        Quan el DEMA(10) passa per sobre del DEMA(20) => comprem
-        //        Quan el DEMA(10) passa per sota del DEMA(20) => venem
-        if (Math.sign(lastValuesDiff) != Math.sign(currentValuesDiff)) {
-            if (Math.sign(lastValuesDiff) < Math.sign(currentValuesDiff)) {   
-                // Anteriorment DEMA(10) estava per sota i ara per sobre => comprem
-                action = "buy";
-            } else {
-                // Anteriorment DEMA(10) estava per sobre i ara per sota => venem
-                action = "sell";
-            }
-        }
+
     } else {
-        console.error("brokerControl.checkAndDecide : lastData with incorrect format");
+        console.error("brokerControl.checkAndDecide : lastData with incorrect format, can not calculate stratey");
     }
 
     currentData.decision = action;
@@ -422,7 +435,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
         };
 
         // Busquem el període mes gran dels indicadors, aquest ens dirà a partir de quin
-        // punt hem de començar a analitzar els prices (eld DEMA necessiten X dades previes)
+        // punt hem de començar a analitzar els prices (els DEMA necessiten X dades previes)
         // P.e.: Si tenim un array de 50 prices i els indicadors que fem servir són DEMA 10 i DEMA 20
         // començarem a calcular al array número 20 de prices i l'aplicarem fins arrivar al final,
         // per tant farem 30 execucions de la funció checkAndDecide, cada cop amb un valor mes al

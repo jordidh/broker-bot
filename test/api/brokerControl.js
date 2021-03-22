@@ -169,7 +169,7 @@ describe('BrokerControl.applyIndicator()', () =>  {
 });
 
 describe('BrokerControl.analizeStrategy()', () => {
-    it('calculates one buy and one sell with -48€ of profit', async () => {
+    it('gives error if strategy is not defined', async () => {
         const analysisBatchNumber = "Proves-0001";
         const analysisId = 1;
         const funds = 1000;   // €
@@ -177,7 +177,166 @@ describe('BrokerControl.analizeStrategy()', () => {
         const market = {
             "id" : "BTC",
             "api" : "",  // pel test no es fa servir
-            "strategy" : "",
+            "strategy" : "",  // <----- no posem cap estratègia, ha de fallar
+            "decisionWindow" : "",
+            "indicator" : [
+                { "name" : "DEMA", "period" : 10 },
+                { "name" : "DEMA", "period" : 20 }
+            ],
+            "tradingBots" : [ ]  // pel test no es fa servir
+        };
+        const prices = [     // cada element ha de ser un array del tipus [ unixtime, obertura, màxim, mínim, tancament ]
+            [1614791800, 0, 0, 0, 166],   // Dades inicials per omplir els DEMA. GMT: Wednesday 3 March 2021 17:16:40 
+            [1614792800, 0, 0, 0, 166],   
+            [1614793800, 0, 0, 0, 166],   
+            [1614794800, 0, 0, 0, 166],   
+            [1614795800, 0, 0, 0, 166],   
+            [1614796800, 0, 0, 0, 166],   
+            [1614797800, 0, 0, 0, 166],   
+            [1614798800, 0, 0, 0, 166],   
+            [1614799800, 0, 0, 0, 166],   
+            [1614800800, 0, 0, 0, 166],   
+            [1614801800, 0, 0, 0, 166],   
+            [1614802800, 0, 0, 0, 166],   
+            [1614803800, 0, 0, 0, 166],   
+            [1614804800, 0, 0, 0, 166],   
+            [1614805800, 0, 0, 0, 166],   
+            [1614806800, 0, 0, 0, 166],   
+            [1614807800, 0, 0, 0, 166],   
+            [1614808800, 0, 0, 0, 166],   
+            [1614809800, 0, 0, 0, 166],   
+            [1614810800, 0, 0, 0, 166],   
+            [1614811800, 0, 0, 0, 166],   // GMT: Wednesday 3 March 2021 22:50:00
+            [1614812800, 0, 0, 0, 166],   // GMT: Wednesday 3 March 2021 23:06:40
+            [1614813800, 0, 0, 0, 166]
+        ];
+        const expectedResult = {
+            "error" : [ "strategy \"\" incorrect or not implemented" ],
+            "result" : { }
+        };
+
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
+
+        //console.log(result);
+
+        expect(result).to.deep.equal(expectedResult);
+    });
+
+    it('gives error if strategy is not defined', async () => {
+        const analysisBatchNumber = "Proves-0001";
+        const analysisId = 1;
+        const funds = 1000;   // €
+        const comission = [ 2, 4];  // comprar 2%, vendre 4%
+        const market = {
+            "id" : "BTC",
+            "api" : "",  // pel test no es fa servir
+            "strategy" : "NOT_DEFINED",  // <----- posem una estratègia que no existeix, ha de fallar
+            "decisionWindow" : "",
+            "indicator" : [
+                { "name" : "DEMA", "period" : 10 },
+                { "name" : "DEMA", "period" : 20 }
+            ],
+            "tradingBots" : [ ]  // pel test no es fa servir
+        };
+        const prices = [     // cada element ha de ser un array del tipus [ unixtime, obertura, màxim, mínim, tancament ]
+            [1614791800, 0, 0, 0, 166],   // Dades inicials per omplir els DEMA. GMT: Wednesday 3 March 2021 17:16:40 
+            [1614792800, 0, 0, 0, 166],   
+            [1614793800, 0, 0, 0, 166],   
+            [1614794800, 0, 0, 0, 166],   
+            [1614795800, 0, 0, 0, 166],   
+            [1614796800, 0, 0, 0, 166],   
+            [1614797800, 0, 0, 0, 166],   
+            [1614798800, 0, 0, 0, 166],   
+            [1614799800, 0, 0, 0, 166],   
+            [1614800800, 0, 0, 0, 166],   
+            [1614801800, 0, 0, 0, 166],   
+            [1614802800, 0, 0, 0, 166],   
+            [1614803800, 0, 0, 0, 166],   
+            [1614804800, 0, 0, 0, 166],   
+            [1614805800, 0, 0, 0, 166],   
+            [1614806800, 0, 0, 0, 166],   
+            [1614807800, 0, 0, 0, 166],   
+            [1614808800, 0, 0, 0, 166],   
+            [1614809800, 0, 0, 0, 166],   
+            [1614810800, 0, 0, 0, 166],   
+            [1614811800, 0, 0, 0, 166],   // GMT: Wednesday 3 March 2021 22:50:00
+            [1614812800, 0, 0, 0, 166],   // GMT: Wednesday 3 March 2021 23:06:40
+            [1614813800, 0, 0, 0, 166]
+        ];
+        const expectedResult = {
+            "error" : [ "strategy \"NOT_DEFINED\" incorrect or not implemented" ],
+            "result" : { }
+        };
+
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
+
+        //console.log(result);
+
+        expect(result).to.deep.equal(expectedResult);
+    });
+
+    it('gives error if strategy demax2 has a invalid indicators', async () => {
+        const analysisBatchNumber = "Proves-0001";
+        const analysisId = 1;
+        const funds = 1000;   // €
+        const comission = [ 2, 4];  // comprar 2%, vendre 4%
+        const market = {
+            "id" : "BTC",
+            "api" : "",  // pel test no es fa servir
+            "strategy" : "demax2",  // <----- posem una estratègia que necessita 2 indicadors DEMA
+            "decisionWindow" : "",
+            "indicator" : [
+                { "name" : "DEMA", "period" : 20 },   //  <----- posem indicadors a l'inrevés, ha de donar error
+                { "name" : "DEMA", "period" : 10 }
+            ],
+            "tradingBots" : [ ]  // pel test no es fa servir
+        };
+        const prices = [     // cada element ha de ser un array del tipus [ unixtime, obertura, màxim, mínim, tancament ]
+            [1614791800, 0, 0, 0, 166],   // Dades inicials per omplir els DEMA. GMT: Wednesday 3 March 2021 17:16:40 
+            [1614792800, 0, 0, 0, 166],   
+            [1614793800, 0, 0, 0, 166],   
+            [1614794800, 0, 0, 0, 166],   
+            [1614795800, 0, 0, 0, 166],   
+            [1614796800, 0, 0, 0, 166],   
+            [1614797800, 0, 0, 0, 166],   
+            [1614798800, 0, 0, 0, 166],   
+            [1614799800, 0, 0, 0, 166],   
+            [1614800800, 0, 0, 0, 166],   
+            [1614801800, 0, 0, 0, 166],   
+            [1614802800, 0, 0, 0, 166],   
+            [1614803800, 0, 0, 0, 166],   
+            [1614804800, 0, 0, 0, 166],   
+            [1614805800, 0, 0, 0, 166],   
+            [1614806800, 0, 0, 0, 166],   
+            [1614807800, 0, 0, 0, 166],   
+            [1614808800, 0, 0, 0, 166],   
+            [1614809800, 0, 0, 0, 166],   
+            [1614810800, 0, 0, 0, 166],   
+            [1614811800, 0, 0, 0, 166],   // GMT: Wednesday 3 March 2021 22:50:00
+            [1614812800, 0, 0, 0, 166],   // GMT: Wednesday 3 March 2021 23:06:40
+            [1614813800, 0, 0, 0, 166]
+        ];
+        const expectedResult = {
+            "error" : [ "indicators incorrect, strategy demax2 must have 2, with the same name and the period of the 2n must be grater than the first" ],
+            "result" : { }
+        };
+
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
+
+        //console.log(result);
+
+        expect(result).to.deep.equal(expectedResult);
+    });
+
+    it('calculates one buy and one sell with strategy demax2 and -48€ of profit', async () => {
+        const analysisBatchNumber = "Proves-0001";
+        const analysisId = 1;
+        const funds = 1000;   // €
+        const comission = [ 2, 4];  // comprar 2%, vendre 4%
+        const market = {
+            "id" : "BTC",
+            "api" : "",  // pel test no es fa servir
+            "strategy" : "demax2",
             "decisionWindow" : "",
             "indicator" : [
                 { "name" : "DEMA", "period" : 10 },
@@ -266,7 +425,7 @@ describe('BrokerControl.analizeStrategy()', () => {
         expect(result).to.deep.equal(expectedResult);
     });
 
-    it('calculates two buy and two sell with +13€ of profit', async () => {
+    it('calculates two buy and two sell with strategy demax2 and +13€ of profit', async () => {
         const analysisBatchNumber = "Proves-0001";
         const analysisId = 2;
         const funds = 1000;   // €
@@ -274,7 +433,7 @@ describe('BrokerControl.analizeStrategy()', () => {
         const market = {
             "id" : "BTC",
             "api" : "",  // pel test no es fa servir
-            "strategy" : "",
+            "strategy" : "demax2",
             "decisionWindow" : "",
             "indicator" : [
                 { "name" : "DEMA", "period" : 10 },

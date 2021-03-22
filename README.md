@@ -70,9 +70,9 @@ El fitxer de configuració ha de tenir la següent estructura:
                 {
                     "id" : "",              // Identificador del mercat que s'analitzarà per generar ordres de compra i venda, les dades es guardaran a la BD amb aquest id
                     "api" : "",             // URL que es farà servir per obtenir les dades, p.e. https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=5
-                    "strategy" : "",        // Mètode JS que aplicarà els indicadors i decidirà si comprar o vendre
+                    "strategy" : "",        // Mètode JS que aplicarà els indicadors i decidirà si comprar o vendre, p.e. "demax2"
                     "decision-window" : "", // Finestra de decisió que s'aplicarà: és el temps sobre el que es mesuraràn els idicadors, hauria de correspondre a la planificació d'execució d'aquest job
-                    "indicator" : [        // Indicadors que s'aplicaran a les dades per poder decidir
+                    "indicator" : [        // Indicadors que s'aplicaran a les dades per poder decidir, han d'anar lligats al strategy,p.e. si es fa servir "demax2" es necessitaran dos indicadors, un DEMA petit i un DEMA mes gran, per aquest ordre
                         { "name" : "DEMA", "period" : 20 },
                         { "name" : "DEMA", "period" : 50 }
                     ],
