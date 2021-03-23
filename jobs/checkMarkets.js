@@ -5,6 +5,8 @@ var logger = require('../api/logger');
 const brokerControl = require('../api/brokerControl');
 var BotPersistentData = require('../api/database/botPersistentData');
 
+const decisionMaker = require('../api/decisionMakers/demax2');
+
 logger.info(config.jobs.checkMarkets.name + " cron planned at " + config.jobs.checkMarkets.schedule);
 var job = schedule.scheduleJob(config.jobs.checkMarkets.schedule, function() {
     try {
@@ -83,7 +85,7 @@ async function checkMarket(markets) {
         //   }
         // }
         //let decision = brokerControl[fn](market, lastData);
-        let decision = await brokerControl.checkAndDecide(market, lastData.result, prices.result);
+        let decision = await brokerControl.checkAndDecide(market, lastData.result, prices.result, decisionMaker);
         logger.info("Decisions result = " + JSON.stringify(decision));
 
         // Emmagatzemem les dades obtingudes

@@ -10,6 +10,7 @@ const should = chai.should();
 const expect    = require("chai").expect;
 
 const brokerControl = require('../../api/brokerControl');
+const decisionMaker = require('../../api/decisionMakers/demax2');
 
 
 describe('BrokerControl.applyIndicator()', () =>  {
@@ -211,18 +212,18 @@ describe('BrokerControl.analizeStrategy()', () => {
             [1614813800, 0, 0, 0, 166]
         ];
         const expectedResult = {
-            "error" : [ "strategy \"\" incorrect or not implemented" ],
+            "error" : [ "strategy \"\" incorrect and does not match with the decisionMarker provided" ],
             "result" : { }
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
 
         //console.log(result);
 
         expect(result).to.deep.equal(expectedResult);
     });
 
-    it('gives error if strategy is not defined', async () => {
+    it('gives error if strategy is not found', async () => {
         const analysisBatchNumber = "Proves-0001";
         const analysisId = 1;
         const funds = 1000;   // €
@@ -264,11 +265,11 @@ describe('BrokerControl.analizeStrategy()', () => {
             [1614813800, 0, 0, 0, 166]
         ];
         const expectedResult = {
-            "error" : [ "strategy \"NOT_DEFINED\" incorrect or not implemented" ],
+            "error" : [ "strategy \"NOT_DEFINED\" incorrect and does not match with the decisionMarker provided" ],
             "result" : { }
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
 
         //console.log(result);
 
@@ -321,7 +322,7 @@ describe('BrokerControl.analizeStrategy()', () => {
             "result" : { }
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
 
         //console.log(result);
 
@@ -418,7 +419,7 @@ describe('BrokerControl.analizeStrategy()', () => {
             } 
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
 
         //console.log(result);
 
@@ -539,7 +540,7 @@ describe('BrokerControl.analizeStrategy()', () => {
             } 
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
 
         //console.log(result);
 
