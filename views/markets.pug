@@ -11,36 +11,41 @@ block content
 
   p Page to show the configuration of each market. Allows test the communication with the trading bot
 
-  h2 Checking market at #{config.schedule}
+  h2 Checking markets JOB scheduled at #{config.schedule}
 
   div
     if config.markets
-      ul
       each market, i in config.markets
-        li 
-          b Market #{market.id} - Extracts data from #{market.api}
-          if market.tradingBots
-            each tbot, i in market.tradingBots
-              p Trading bots linked with tihis market:
-              .container
-                fieldset
-                  form(action=tbot.url, method='post')
-                    | 📉 Test buy to #{tbot.url} - pair #{tbot.pair} &nbsp;
-                    input.ghost-input(name='action', type='hidden', value='buy')
-                    input.ghost-input(name='pair', type='hidden', value=tbot.pair)
-                    input.ghost-input(name='token', type='hidden', value=tbot.token)
-                    input.ghost-input(name='test', type='hidden', value='mock-kraken')
-                    input.ghost-input(name='testBalance', type='hidden', value='{"error" : [],"result" : {"ZEUR" : [155.5649]}}')
-                    input.ghost-input(name='testCryptoValue', type='hidden', value='{"error": [],"result": {"XXBTZEUR": {a: [ "45193.40000", "1", "1.000" ]}}}')
-                    input.ghost-button(name='btn', type='submit', value='Test Buy')
-              .container
-                fieldset
-                  form(action=tbot.url, method='post')
-                    | 📈 Test sell to #{tbot.url} - pair #{tbot.pair} &nbsp;
-                    input.ghost-input(name='action', type='hidden', value='sell')
-                    input.ghost-input(name='pair', type='hidden', value=tbot.pair)
-                    input.ghost-input(name='token', type='hidden', value=tbot.token)
-                    input.ghost-input(name='test', type='hidden', value='mock-kraken')
-                    input.ghost-input(name='testBalance', type='hidden', value='{"error" : [],"result" : {"ZEUR" : [155.5649]}}')
-                    input.ghost-input(name='testCryptoValue', type='hidden', value='{"error": [],"result": {"XXBTZEUR": {a: [ "45193.40000", "1", "1.000" ]}}}')
-                    input.ghost-button(name='btn', type='submit', value='Test Sell')
+        h3 Market #{market.id}
+        p Extracts data from 
+          a(href=market.api) #{market.api}
+        if market.indicator
+          p Indicators:
+          ul
+          each ind, i in market.indicator
+            li #{ind.name} - #{ind.period}
+        if market.tradingBots
+          each tbot, i in market.tradingBots
+            p Trading bots linked with this market:
+            .container
+              fieldset
+                form(action=tbot.url, method='post')
+                  | 📉 Buy signal to #{tbot.url} - pair #{tbot.pair} &nbsp;
+                  input.ghost-input(name='action', type='hidden', value='buy')
+                  input.ghost-input(name='pair', type='hidden', value=tbot.pair)
+                  input.ghost-input(name='token', type='hidden', value=tbot.token)
+                  input.ghost-input(name='test', type='hidden', value='mock-kraken')
+                  input.ghost-input(name='testBalance', type='hidden', value='{"error" : [],"result" : {"ZEUR" : [155.5649]}}')
+                  input.ghost-input(name='testCryptoValue', type='hidden', value='{"error": [],"result": {"XXBTZEUR": {a: [ "45193.40000", "1", "1.000" ]}}}')
+                  input.ghost-button(name='btn', type='submit', value='Test Buy')
+            .container
+              fieldset
+                form(action=tbot.url, method='post')
+                  | 📈 Sell signal to #{tbot.url} - pair #{tbot.pair} &nbsp;
+                  input.ghost-input(name='action', type='hidden', value='sell')
+                  input.ghost-input(name='pair', type='hidden', value=tbot.pair)
+                  input.ghost-input(name='token', type='hidden', value=tbot.token)
+                  input.ghost-input(name='test', type='hidden', value='mock-kraken')
+                  input.ghost-input(name='testBalance', type='hidden', value='{"error" : [],"result" : {"ZEUR" : [155.5649]}}')
+                  input.ghost-input(name='testCryptoValue', type='hidden', value='{"error": [],"result": {"XXBTZEUR": {a: [ "45193.40000", "1", "1.000" ]}}}')
+                  input.ghost-button(name='btn', type='submit', value='Test Sell')
