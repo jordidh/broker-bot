@@ -6,6 +6,7 @@
 const logger = require('../api/logger');
 const moment = require('moment');
 const { v1: uuidv1 } = require('uuid');
+const fs = require('fs').promises;
 const kraken = require('../api/exchanges/kraken/apis');
 const krakenMoked = require('../api/exchanges/kraken/apisMocked');
 const config = require('../config/config');
@@ -13,9 +14,15 @@ const pjson = require('../package.json');
 var express = require('express');
 const router = express.Router();
 var BotPersistentData = require('../api/database/botPersistentData');
+const brokerControl = require('../api/brokerControl');
+
+const decisionMakerDemax2 = require('../api/decisionMakers/demax2');
+const decisionMakerEmax2AdxMacd = require('../api/decisionMakers/emax2-adx-macd');
 
 const colors = ['#2f7ed8', '#0d233a', '#8bbc21', '#910000', '#1aadce',
 '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a'];
+
+const TEST_DATA_PATH = "./database/prices";
 
 router.get('/', function (req, res, next) {
     let reqId = uuidv1();
@@ -52,7 +59,7 @@ router.get('/dashboard', function (req, res, next) {
 });
 
 
-router.get('/markets', function (req, res, next) {
+router.get('/markets', async function (req, res, next) {
     let reqId = uuidv1();
 
     // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
@@ -62,7 +69,10 @@ router.get('/markets', function (req, res, next) {
     logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
 
     try {
-        res.render('markets', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, config : config.jobs.checkMarkets });
+        // Recuperem tots els fitxers JSON amb dades de prova per mostrar-los i que es pugui analitzar
+        let testPrices = await fs.readdir(TEST_DATA_PATH);
+
+        res.render('markets', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, config : config.jobs.checkMarkets, testPrices : testPrices });
     } catch (e) {
         logger.error(e);
         res.render('markets', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, m_alert: e.message });
@@ -70,8 +80,9 @@ router.get('/markets', function (req, res, next) {
 });
 
 /**
- * Funció per mostrar una gràfica amb elsúltims anàlisis i decisions
- * /anaysis?market=id&numberOfValues=50
+ * Funció per mostrar una gràfica amb els últims anàlisis i decisions
+ * /anaysis?market=id&numberOfValues=50 : recupera els prices guardats a la BD pel JOB i els analitza
+ * /anaysis?market=id&numberOfValues=50&testData=file.json : recupera els prices guardats en fitxers i els analitza
  */
 router.get('/analysis', async function (req, res, next) {
     let reqId = uuidv1();
@@ -107,8 +118,8 @@ router.get('/analysis', async function (req, res, next) {
 
         // Recuperem el id del mercat que volem consultar
         let marketId = "";
-        if (req.query.marquet) {
-            marketId = req.query.marquet;
+        if (req.query.market) {
+            marketId = req.query.market;
         } else {
             // Si no s'indica el mercat agafem el primer
             let markets = await botData.getMarkets();
@@ -129,31 +140,67 @@ router.get('/analysis', async function (req, res, next) {
             }
         }
 
+        // Recuperem el market de la configuració
+        let market = config.jobs.checkMarkets.markets.find(m => m.id === marketId);
+        if (typeof market === "undefined") {
+            logger.error("No market found with id = " + marketId);
+        }
+
         // Ja tenim les dades per posar títol a la gràfica
         dataToShow.title = marketId + " - Analysis of last " + numberOfValues + " prices and indexes";
 
-        // Recuperem últimes dades emmagatzemades per aquest mercat
-        // Retorna una cosa del tipus: [{
-        //   market : "id",
-        //   windowStart : 1614933060,
-        //   windowEnd : 1614945000,
-        //   price : 34,
-        //   indicatorValues : [
-        //     { "name" : "DEMA", "period" : 20, "value" : 34 },
-        //     { "name" : "DEMA", "period" : 50, "value" : 34 }
-        //   ],
-        //   decision : "relax"
-        // }]
-        let lastData = await botData.getLastMarketDatasAsc(marketId, numberOfValues);
-        if (lastData.error.length > 0) {
-            logger.error("No data found calling getLastMarketDatasAsc: " + lastData.error[0]);
-            return res.render('analysis', { 
-                name: pjson.name, 
-                version: pjson.version, 
-                baseUrl : config.APP_CLIENT_BASE_URL,
-                data : dataToShow,
-                m_alert: "No data found calling getLastMarketDatasAsc: " + lastData.error[0] 
-            });
+        // Reuperem les dades que volem mostrar
+        let lastData = [];
+        if (req.query.testData) {
+            // recuperem les dades de test
+            const rawPrices = await fs.readFile(TEST_DATA_PATH + "/" + req.query.testData, "ascii");
+            const prices = JSON.parse(rawPrices); // Array d'arrays on cada element ha de ser un array del tipus [ unixtime, obertura, màxim, mínim, tancament ]
+
+            // Apliquem l'estratègia a sobre dels preus
+            let funds = 1000;
+            let comission = [2, 2];
+
+            // triem el decision maker
+            let decisionMaker = null;
+            switch(market.strategy) {
+                case "demax2":
+                    decisionMaker = decisionMakerDemax2;
+                    break;
+                case "emax2-adx-macd":
+                    decisionMaker = decisionMakerEmax2AdxMacd;
+                    break;
+                default:
+                    console.error("Market strategy is not valid \"" + market.strategy + "\"");
+                    break;
+            }
+
+            lastData = await brokerControl.analizeStrategy("B1", 1, funds, comission, market, prices, decisionMaker);
+        } else {
+            // Si no s'indica agafar les dades de prices de test s'agafen de la BD
+
+            // Recuperem últimes dades emmagatzemades per aquest mercat
+            // Retorna una cosa del tipus: [{
+            //   market : "id",
+            //   windowStart : 1614933060,
+            //   windowEnd : 1614945000,
+            //   price : 34,
+            //   indicatorValues : [
+            //     { "name" : "DEMA", "period" : 20, "value" : 34 },
+            //     { "name" : "DEMA", "period" : 50, "value" : 34 }
+            //   ],
+            //   decision : "relax"
+            // }]
+            lastData = await botData.getLastMarketDatasAsc(marketId, numberOfValues);
+            if (lastData.error.length > 0) {
+                logger.error("No data found calling getLastMarketDatasAsc: " + lastData.error[0]);
+                return res.render('analysis', { 
+                    name: pjson.name, 
+                    version: pjson.version, 
+                    baseUrl : config.APP_CLIENT_BASE_URL,
+                    data : dataToShow,
+                    m_alert: "No data found calling getLastMarketDatasAsc: " + lastData.error[0] 
+                });
+            }
         }
 
         //console.log(lastData);
@@ -172,16 +219,16 @@ router.get('/analysis', async function (req, res, next) {
         let color = 0;
 
         // Passada 1: posem els timestamps i creem les sèries
-        for (let i = 0; i < lastData.result.length; i++) {
-            let currentTime = (new Date(lastData.result[i].windowEnd * 1000)).toISOString();
+        for (let i = 0; i < lastData.result.data.length; i++) {
+            let currentTime = (new Date(lastData.result.data[i].windowEnd * 1000)).toISOString();
             let timeFound = timestamps.find(o => o === currentTime);
             if (typeof timeFound === "undefined") {
                 timestamps.push(currentTime);
-                timestampsUnixEpoch.push(lastData.result[i].windowEnd);
+                timestampsUnixEpoch.push(lastData.result.data[i].windowEnd);
             }
            
-            for (let j = 0; j < lastData.result[i].indicatorValues.length; j++) {
-                let serieName = lastData.result[i].indicatorValues[j].name + lastData.result[i].indicatorValues[j].period;
+            for (let j = 0; j < lastData.result.data[i].indicatorValues.length; j++) {
+                let serieName = lastData.result.data[i].indicatorValues[j].name + lastData.result.data[i].indicatorValues[j].period;
                 let serieFound = series.find(o => o.name === serieName);
                 if (typeof serieFound === "undefined") {
                     series.push({
@@ -213,7 +260,7 @@ router.get('/analysis', async function (req, res, next) {
         // Passada 2: per a cada timestamp posem el valor a les sèries
         for (let i = 0; i < timestamps.length; i++) {
             // Busquem les dades que corresponguin a aquest timestamp
-            let dataFound = lastData.result.filter(o => o.windowEnd === timestampsUnixEpoch[i]);
+            let dataFound = lastData.result.data.filter(o => o.windowEnd === timestampsUnixEpoch[i]);
 
             if (dataFound) {
                 // De les dades recuperades mirem a quina sèrie corresponen (comparema amb el nom i period)
@@ -271,4 +318,15 @@ router.get('/analysis', async function (req, res, next) {
     }
 });
 
+/*
+exports.getTestPrices = async function(path) {
+    const data = await fs.readFile(path, "ascii");
+    return JSON.parse(data);
+}
+
+exports.getAvailableTestPrices = async function(){
+    return await 
+}
+*/
 module.exports = router;
+

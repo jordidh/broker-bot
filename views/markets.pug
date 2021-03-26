@@ -19,11 +19,24 @@ block content
         h3 Market #{market.id}
         p Extracts data from 
           a(href=market.api) #{market.api}
+        p 
+          a(href=baseUrl + '/analysis?market=' + market.id) Show graphic from last market data
         if market.indicator
           p Indicators:
           ul
           each ind, i in market.indicator
             li #{ind.name} - #{ind.period}
+        p Strategy #{market.strategy}
+          .container
+            fieldset
+              form(action='analysis', method='get')
+                | 🧪 Test with prices &nbsp;
+                input.ghost-input(name='market', type='hidden', value=market.id)
+                input.ghost-input(name='numberOfValues', type='hidden', value=999999)
+                select(name= 'testData')
+                  each prices, i in testPrices
+                    option(value=prices) #{prices}
+                input.ghost-button(name='btn', type='submit', value='Test')
         if market.tradingBots
           each tbot, i in market.tradingBots
             p Trading bots linked with this market:

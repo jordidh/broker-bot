@@ -74,7 +74,8 @@ El fitxer de configuració ha de tenir la següent estructura:
                     "decision-window" : "", // Finestra de decisió que s'aplicarà: és el temps sobre el que es mesuraràn els idicadors, hauria de correspondre a la planificació d'execució d'aquest job
                     "indicator" : [        // Indicadors que s'aplicaran a les dades per poder decidir, han d'anar lligats al strategy,p.e. si es fa servir "demax2" es necessitaran dos indicadors, un DEMA petit i un DEMA mes gran, per aquest ordre
                         { "name" : "DEMA", "period" : 20 },
-                        { "name" : "DEMA", "period" : 50 }
+                        { "name" : "DEMA", "period" : 50 },
+                        { "name" : "MACD", "period" : { "longInterval": 20, "shortInterval": 12, "signal": 9} }
                     ],
                     "trading-bots" : [      // Bots de trading a que s'enviarà un POST per comprar o vendre
                         {

@@ -1,11 +1,14 @@
 "use strict";
 
-//const {SMA, EMA} = require('trading-signals');
+const {SMA, EMA} = require('trading-signals');
 const Big = require('big.js');
 const tradingSignals = require('trading-signals');
 const { BollingerBands } = require('trading-signals');
 const axios = require('axios');
 const https = require('https');
+
+const DATA_TIMESTAMP_INDEX = 0;  // Índex que ocupa el valor de timestamp dins de l'array de dades
+const DATA_PRICE_INDEX = 4; // Índex que ocupa el valor del preu dins de l'array de dades
 
 /**
  * Funció que calcula el l'indicador especificat d'un array de valors
@@ -18,14 +21,22 @@ const https = require('https');
  *                       [val1, val2, val3, ....],
  *                       ...
  *                     ]
+ * [
+ *    1614811800,    <--- unixtime
+ *    42020.0,     <--- obertura
+ *    42125.1,     <--- màxim
+ *    41980.0,     <--- mínim
+ *    42006.9     <--- tancament
+ * ]
  * @param {*} indicator : indicador que s'aplicarà ("SMA", "EMA", "DEMA")
  * @param {*} period : periòde de temps sobre el que es calcularà las senyal
  * @param {*} timeIndex: index a dins de l'array per saber quin és el valor que conté la data i hora
  * @param {*} priceIndex: index a dins de l'array per saber quin és el valor sobre el que hem de calcular
+ *                        Alguns index necessiten high ilow que seran priceIndex-2 i priceIndex-1
  */
 exports.applyIndicator = async function(prices, indicator, period, timeIndex, priceIndex) {
     try {
-        if (typeof period === "undefined" || isNaN(parseInt(period)) || parseInt(period) != period) {
+        if (typeof period === "undefined") {
             return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
         }
         if (typeof priceIndex === "undefined" || isNaN(parseInt(priceIndex)) || parseInt(priceIndex) != priceIndex) {
@@ -39,47 +50,143 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
         }
 
 
+        /*
+        let adxi = new tradingSignals.ADX(14);
+        adxi.update({"high": 30.1983, "low": 29.4072, "close": 29.872});
+        adxi.update({"high": 31.1983, "low": 28.4072, "close": 29.872});
+        adxi.update({"high": 32.1983, "low": 27.4072, "close": 28.872});
+        adxi.update({"high": 31.1983, "low": 25.4072, "close": 27.872});
+        adxi.update({"high": 32.1983, "low": 23.4072, "close": 28.872});
+        adxi.update({"high": 33.1983, "low": 22.4072, "close": 29.872});
+        adxi.update({"high": 35.1983, "low": 24.4072, "close": 28.872});
+        adxi.update({"high": 34.1983, "low": 23.4072, "close": 27.872});
+        adxi.update({"high": 35.1983, "low": 25.4072, "close": 28.872});
+        adxi.update({"high": 36.1983, "low": 26.4072, "close": 28.872});
+        adxi.update({"high": 37.1983, "low": 24.4072, "close": 29.872});
+        adxi.update({"high": 33.1983, "low": 22.4072, "close": 28.872});
+        adxi.update({"high": 34.1983, "low": 21.4072, "close": 29.872});
+        adxi.update({"high": 36.1983, "low": 20.4072, "close": 27.872});
+        adxi.update({"high": 38.1983, "low": 22.4072, "close": 26.872});
+        adxi.update({"high": 36.1983, "low": 21.4072, "close": 28.872});
+        adxi.update({"high": 34.1983, "low": 24.4072, "close": 29.872});
+        adxi.update({"high": 33.1983, "low": 25.4072, "close": 28.872});
+        adxi.update({"high": 32.1983, "low": 22.4072, "close": 28.872});
+        adxi.update({"high": 33.1983, "low": 21.4072, "close": 29.872});
+        adxi.update({"high": 34.1983, "low": 20.4072, "close": 27.872});
+        adxi.update({"high": 35.1983, "low": 22.4072, "close": 28.872});
+        adxi.update({"high": 37.1983, "low": 23.4072, "close": 29.872});
+        adxi.update({"high": 30.1983, "low": 23.4072, "close": 29.872});
+
+        let val = adxi.getResult().toNumber();
+        */
+
+
+
         let result = new Array(prices.length);
 
         let currentIndicator = null;
         switch(indicator) {
             case "SMA":  // Simple Moving Average (SMA) => tested OK
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.SMA(period);
                 break;
             case "EMA": // Exponential Moving Average (EMA) =>  tested OK
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.EMA(period);
                 break;
             case "DEMA": // Double Exponential Moving Average (DEMA) => tested OK
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.DEMA(period);
                 break;
             case "ABANDS": //Acceleration Bands (ABANDS)
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.AccelerationBands(period);
                 break;
-            case "ADX": // Average Directional Index (ADX)
+            case "ADX": 
+                // Average Directional Index (ADX)
+                // El ADX oscila entre 0 y 100
+                // Com s'utilitza: Cuando el ADX es mayor que 30, el mercado se encuentra en una tendencia fuerte, 
+                //                 cuando está entre 20 y 30 no está bien definido y cuando es menor a 20 indica 
+                //                 que el mercado está en rango. Las formas más comunes de utilizar el ADX son:
+                // Conocer la fuerza de una tendencia: Cuando el ADX tiene pendiente positiva y/o se sitúa en niveles entre 30 y 40 indica fortaleza de tendencia. En movimientos de tendencia fuerte (ya sea alcista o bajista) el especulador aprovecha las correcciones a la baja (en tendencia alcista) para comprar el valor y los rebotes (en tendencia bajista).
+                // Para saber cuando un rango llega a su fin: Cuando el ADX se encuentra por debajo de 20-30 y/o se encuentra entre las líneas de movimiento direccional. Con los precios en rango, los especuladores compran en la parte inferior y venden en la superior, el ADX les permite saber cuando ese rango se termina. Además, la señal de que un rango termina significa que comienza una nueva tendencia, por lo que especulador solo tendrá que subirse a ésta.
+                // Determinar cambios de tendencia: Cuando existen divergencias demasiado altas (por encima de 45-50) quiere decir que la tendencia se está agotando o está perdiendo fuerza. Por lo que probablemente se tome un respiro. Por el contrario, cuando estas divergencias se encuentran por encima de 30, pero en lecturas no muy altas entendemos que la tendencia se está fortaleciendo.
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.ADX(period);
                 break;
             case "ATR": // Average True Range (ATR)
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.ATR(period);
                 break;
             case "BBANDS": //Bollinger Bands (BBANDS)
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.BollingerBands(period);
                 break;
             case "CG": // Center of Gravity (CG)
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.CG(period);
                 break;
             case "DMA": // Double Moving Average (DMA)
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.DMA(period);
                 break;
-            case "MACD": // Moving Average Convergence Divergence (MACD)
-                currentIndicator = new tradingSignals.MACD(period);
+            case "MACD": 
+                if (period.hasOwnProperty('longInterval') === false || 
+                    period.hasOwnProperty('shortInterval') === false || 
+                    period.hasOwnProperty('signal') === false) {
+                    return { "error" : [ "error in parameter period, must be an object with properties longInterval, shortInterval and signal" ], "result" : { } }
+                }
+                // Moving Average Convergence Divergence (MACD): 
+                // Indica la fortalesa dels moviments del preu
+                // Permet decidir els moviments mes adecuats per comprar o vendre
+                // Es compon de dues línies (MACD i senyal) i un histograma
+                // Com es calcula: 
+                // - Es calcula el MACD amb la fòrmula: MACD = EMA(període petit) - EMA(període llarg)
+                // - Es calcula la senyal: la mitjana mòbil exponencial amb un altre període.
+                // Com s'utilitza: Es visualitza les dues gràfiques (MACD i senyal) i l'histograma resultata de restar MACD - senyal
+                //                 Quan es creuen les senyals hi ha un canvi de mercat, si l'histograma és positiu el mercat és alcista,
+                //                 i si és negatiu és baixista
+                currentIndicator = new tradingSignals.MACD({
+                    indicator: EMA,
+                    longInterval: period.longInterval,
+                    shortInterval: period.shortInterval,
+                    signalInterval: period.signal
+                });
                 break;
             case "ROC": // Rate-of-Change (ROC)
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.ROC(period);
                 break;
             case "RSI": // Relative Strength Index (RSI)
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.RSI(period);
                 break;
             case "SMMA": // Smoothed Moving Average (SMMA)
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
                 currentIndicator = new tradingSignals.SMMA(period);
                 break;
             default:
@@ -87,9 +194,24 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
         }
 
         prices.forEach((price, index) => {
-            currentIndicator.update(new Big(price[priceIndex]));
 
-            if (index >= period - 1) {
+            switch(indicator) {
+                case "ADX":
+                    // Hem d'actualitzar amb diversos preus: {"high": 30.1983, "low": 29.4072, "close": 29.872}
+                    currentIndicator.update({
+                        "high" : price[priceIndex - 2],
+                        "low" : price[priceIndex - 1],
+                        "close" : price[priceIndex]
+                    });
+                    break;
+                default:
+                    currentIndicator.update(new Big(price[priceIndex]));
+                    break;
+            }
+            
+            //currentIndicator.update(price[priceIndex]);
+
+            if (index >= period - 1 && currentIndicator.isStable) {
             //if (currentIndicator.isStable) {
                 result[index] = [prices[index][timeIndex], currentIndicator.getResult().toNumber()];
             } else {
@@ -196,7 +318,7 @@ exports.checkAndDecide = async function(market, lastData, prices, decisionMaker)
     // Per cada indicador, l'apliquem a les dades i ens quedem amb l'últim valor
     for (let i = 0; i < market.indicator.length; i++) {
         // Apliquem l'indicador sobre el preu al tancament (índex 4)
-        let indicator = await this.applyIndicator(prices, market.indicator[i].name, market.indicator[i].period, 0, 4);
+        let indicator = await this.applyIndicator(prices, market.indicator[i].name, market.indicator[i].period, DATA_TIMESTAMP_INDEX, DATA_PRICE_INDEX);
 
         //console.log(indicator);
 
@@ -388,16 +510,6 @@ exports.postToTradingBot = async function(bot, action) {
  */
 exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker) {
     try {
-        let result = {
-            "data" : [],
-            "fundsBegin" : funds,
-            "fundsEnd" : 0,
-            "comission" : 0,
-            "profit" : 0,
-            "analysisBatchNumber" : analysisBatchNumber,
-            "analysisId" : analysisId
-        };
-
         // Busquem el període mes gran dels indicadors, aquest ens dirà a partir de quin
         // punt hem de començar a analitzar els prices (els DEMA necessiten X dades previes)
         // P.e.: Si tenim un array de 50 prices i els indicadors que fem servir són DEMA 10 i DEMA 20
@@ -418,12 +530,25 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
             }
         }
 
+        let result = {
+            "data" : new Array(prices.length - maxPeriod),
+            "fundsBegin" : funds,
+            "fundsEnd" : 0,
+            "comission" : 0,
+            "profit" : 0,
+            "analysisBatchNumber" : analysisBatchNumber,
+            "analysisId" : analysisId
+        };
+
         // Inicialitzem el valor de lastData
         let lastData = { };
 
         // Executem el checkAndDecide per cada price i guardem les dades resultants
         // per analitzarles posteriorment
         for (let i = maxPeriod; i < prices.length; i++) {
+
+            //console.log("Step " + i + " of " + prices.length);
+            
             let partialPrices = prices.slice(0, i+1); // Nota: La posició final (contant des de zero) en la qual finalitzarà l'extracció. slice extraurà fins a aquesta posicó, sense incloure-la.
 
             // Executem la funció amb les dades recuperades que ha de decidir que fer, si comprar, vendre o res
@@ -490,7 +615,8 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
             }
 
             // Emmagatzemem les dades obtingudes
-            result.data.push(decision.result.currentData);
+            //result.data.push(decision.result.currentData);
+            result.data[i - maxPeriod] = decision.result.currentData;
 
             // Guardem l'últim valor calculat per la següent iteració
             lastData = decision.result.currentData;

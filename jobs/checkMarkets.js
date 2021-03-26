@@ -5,8 +5,6 @@ var logger = require('../api/logger');
 const brokerControl = require('../api/brokerControl');
 var BotPersistentData = require('../api/database/botPersistentData');
 
-const decisionMaker = require('../api/decisionMakers/demax2');
-
 logger.info(config.jobs.checkMarkets.name + " cron planned at " + config.jobs.checkMarkets.schedule);
 var job = schedule.scheduleJob(config.jobs.checkMarkets.schedule, function() {
     try {
@@ -74,6 +72,20 @@ async function checkMarket(markets) {
             return;
         }
         logger.info("Prices length = " + ((prices && prices.result) ? prices.result.length : 0));
+
+        // Definim l'objecte de decisió segons s'hagi configurat
+        let decisionMaker = require('../api/decisionMakers/demax2');
+        switch(market.strategy) {
+            case "demax2":
+                decisionMaker = require('../api/decisionMakers/demax2');
+                break;
+            case "emax2-adx-macd":
+                decisionMaker = require('../api/decisionMakers/emax2-adx-macd');
+                break;
+            default:
+                logger.error("checking market strategy, error not found: " + market.strategy);
+                return;
+        }
 
         // Executem la funció amb les dades recuperades que ha de decidir que fer, si comprar, vendre o res
         // Retorna una cosa del tipus: {
