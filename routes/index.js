@@ -147,7 +147,7 @@ router.get('/analysis', async function (req, res, next) {
         }
 
         // Ja tenim les dades per posar títol a la gràfica
-        dataToShow.title = marketId + " - Analysis of last " + numberOfValues + " prices and indexes";
+        dataToShow.title = marketId + " - Analysis of last prices and indexes";
 
         // Reuperem les dades que volem mostrar
         let lastData = [];
@@ -175,6 +175,7 @@ router.get('/analysis', async function (req, res, next) {
             }
 
             lastData = await brokerControl.analizeStrategy("B1", 1, funds, comission, market, prices, decisionMaker);
+
         } else {
             // Si no s'indica agafar les dades de prices de test s'agafen de la BD
 
@@ -190,7 +191,21 @@ router.get('/analysis', async function (req, res, next) {
             //   ],
             //   decision : "relax"
             // }]
-            lastData = await botData.getLastMarketDatasAsc(marketId, numberOfValues);
+            lastData = {
+                "error" : [],
+                "result" : {
+                    "data" : [],
+                    "fundsBegin" : 0,
+                    "fundsEnd" : 0,
+                    "comission" : 0,
+                    "profit" : 0,
+                    "analysisBatchNumber" : "",
+                    "analysisId" : 0
+                }
+            }
+            let res = await botData.getLastMarketDatasAsc(marketId, numberOfValues);
+            lastData.result.data = res.result;
+            lastData.error = res.error;
             if (lastData.error.length > 0) {
                 logger.error("No data found calling getLastMarketDatasAsc: " + lastData.error[0]);
                 return res.render('analysis', { 
@@ -257,7 +272,12 @@ router.get('/analysis', async function (req, res, next) {
             series[i].data = Array(timestamps.length).fill(0);
         }
 
-        // Passada 2: per a cada timestamp posem el valor a les sèries
+        // Passada 2: per a cada timestamp posem el valor a les sèries i calculem el benefici
+        dataToShow.totalProfit = lastData.result.profit; // benefici total, es sumen els beneficis de cada operació
+        dataToShow.initialFunds = lastData.result.fundsBegin;        // € a l'inici del domini
+        dataToShow.endFunds = lastData.result.fundsEnd;       // € al final de l'anàlisi
+        dataToShow.totalComission =  lastData.result.comission;      // comissió total, es sumen les comissions aplicades a cada operació
+
         for (let i = 0; i < timestamps.length; i++) {
             // Busquem les dades que corresponguin a aquest timestamp
             let dataFound = lastData.result.data.filter(o => o.windowEnd === timestampsUnixEpoch[i]);
@@ -296,8 +316,8 @@ router.get('/analysis', async function (req, res, next) {
                         }
                         break;
                     default:
-                    series[series.length - 1].data[i] = dataFound[0].price;
-                     break;
+                        series[series.length - 1].data[i] = dataFound[0].price;
+                        break;
                 }
             }
         }

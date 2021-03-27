@@ -351,7 +351,7 @@ exports.checkAndDecide = async function(market, lastData, prices, decisionMaker)
             }    
         }
     } else {
-        console.error("brokerControl.checkAndDecide : lastData with incorrect format, can not calculate stratey");
+        console.log("brokerControl.checkAndDecide : lastData with incorrect format, can not calculate stratey for the current value");
     }
 
     currentData.decision = action;
@@ -499,8 +499,8 @@ exports.postToTradingBot = async function(bot, action) {
  *          volume : , // Valor NOU, guarda el volum comprat (€ compra / preu moment de la compra)
  *          buyPrice :   // Valor NOU, guarda l'últim preu de compra, per poder calcular el benefici
  *      }, ... ],
- *      funds : 100,        // € a l'inici del domini
- *      result : 110,       // € al final de l'anàlisi
+ *      fundsBegin : 100,        // € a l'inici del domini
+ *      fundsEnd : 110,       // € al final de l'anàlisi
  *      comission : 5,      // comissió total, es sumen les comissions aplicades a cada operació
  *      profit : 5,         // benefici total, es sumen els beneficis de cada operació
  *      analysisBatchNumber: "", // identificador del procés d'anàlisis

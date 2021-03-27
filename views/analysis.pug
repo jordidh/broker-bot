@@ -20,12 +20,13 @@ block extraStyles
 block content
   h1 #{name} V #{version}
 
-  p Page to show the last indicator values and the decision taken by the bot
-
   figure.highcharts-figure
   #container(style='height: 620px; min-width: 310px')
   p.highcharts-description
-    | Line chart
+    | Initial Funds = #{data.initialFunds}
+    | End Funds = #{data.endFunds}
+    | Total comission = #{data.totalComission}
+    | Total profit = #{data.totalProfit}
 
   script(type='text/javascript').
     // create the chart
