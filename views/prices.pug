@@ -1,0 +1,122 @@
+extends layout
+
+block variables
+    - var msgAlert = m_alert
+    - var msgSuccess = m_success
+    - var msgInfo = m_info
+    - var msgWarning = m_warning
+
+block content
+  h1 #{name} V #{version}
+
+  p Page to get prices from exchanges
+
+  p Get prices from exchange (kraken returns the last 720 data points)
+    .container
+      fieldset
+        form(action='prices', method='get')
+          | 🧪 Test with prices &nbsp;
+          select(name= 'exchange')
+            if exchanges
+              each exchange, i in exchanges
+                option(value=exchange.url) #{exchange.name}
+          select(name= 'pair')
+            if pairs
+              each pair, i in pairs
+                option(value=pair) #{pair}
+          select(name= 'interval')
+            if intervals
+              each interval, i in intervals
+                option(value=interval) #{interval}
+          input.ghost-button(name='btn', type='submit', value='GetPrices')
+
+  figure.highcharts-figure
+  #container(style='height: 620px; min-width: 310px')
+  p.highcharts-description
+    | Description
+
+  script(type='text/javascript').
+    // create the chart
+    var colors = Highcharts.getOptions().colors;
+
+    Highcharts.chart('container', {
+      chart: {
+        type: 'spline',
+        zoomType: 'y'
+      },
+
+      legend: {
+        symbolWidth: 40
+      },
+
+      title: {
+        //text: 'Most common desktop screen readers'
+        text: "#{data.title}"
+      },
+
+      subtitle: {
+        text: '#{data.subtitle}'
+      },
+
+      yAxis: {
+        title: {
+          text: '#{data.yAxisTitle}'
+        },
+        accessibility: {
+          description: '#{data.yAxisDesc}'
+        }
+      },
+
+      xAxis: {
+        title: {
+          text: '#{data.xAxisTitle}'
+        },
+        accessibility: {
+          description: '#{data.xAxisDesc}'
+        },
+        categories: !{data.xAxisCategories}
+      },
+
+      tooltip: {
+        valueSuffix: '#{data.tooltipValueSuffix}'
+      },
+
+      plotOptions: {
+        series: {
+          point: {
+            events: {
+              click: function () {
+                window.location.href = this.series.options.website;
+              }
+            }
+          },
+          cursor: 'pointer'
+        }
+      },
+
+      series: !{data.series},
+
+      responsive: {
+        rules: [{
+          condition: {
+            maxWidth: 550
+          },
+          chartOptions: {
+            chart: {
+              spacingLeft: 3,
+              spacingRight: 3
+            },
+            legend: {
+              itemWidth: 150
+            },
+            xAxis: {
+              categories: !{data.xAxisCategories},
+              title: ''
+            },
+            yAxis: {
+              visible: false
+            }
+          }
+        }]
+      }
+    });

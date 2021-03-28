@@ -11,6 +11,7 @@ const kraken = require('../api/exchanges/kraken/apis');
 const krakenMoked = require('../api/exchanges/kraken/apisMocked');
 const config = require('../config/config');
 const pjson = require('../package.json');
+const https = require('https');
 var express = require('express');
 const router = express.Router();
 var BotPersistentData = require('../api/database/botPersistentData');
@@ -23,6 +24,22 @@ const colors = ['#2f7ed8', '#0d233a', '#8bbc21', '#910000', '#1aadce',
 '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a'];
 
 const TEST_DATA_PATH = "./database/prices";
+
+const EXCHANGES = [
+    { name : "Kraken", url : "https://api.kraken.com/0/public/OHLC" }
+];
+const KRAKEN_PAIRS_FIAT_CRYPTO = [
+    "AAVEUSD", "AAVEEUR", "ALGOUSD", "ALGOEUR", "ANTUSD", "ANTEUR",
+    "XBTUSD", "XBTEUR",
+    "ADAUSD", "ADAEUR",
+    "ETHUSD", "ETHEUR",
+    "LTCUSD", "LTCEUR",
+    "XRPUSD", "XRPEUR",
+    "USDTUSD", "USDTEUR"
+];
+const KRAKEN_INTERVALS = [
+    1, 5, 15, 30, 60, 240, 1440, 10080, 21600
+];
 
 router.get('/', function (req, res, next) {
     let reqId = uuidv1();
@@ -338,15 +355,124 @@ router.get('/analysis', async function (req, res, next) {
     }
 });
 
-/*
-exports.getTestPrices = async function(path) {
-    const data = await fs.readFile(path, "ascii");
-    return JSON.parse(data);
-}
+/**
+ * Funció que recupera OHLC preus de Kraken i permet guardar-los com a dades de test
+ * 
+ * The REST API OHLC endpoint only provides a limited amount of historical data, specifically 720 data points of the requested interval. 
+ * For example, asking for OHLC data in 1 minute intervals will return the most recent 720 minutes (12 hours) of data.
+ * 
+ * Get OHLC data
+ * URL: https://api.kraken.com/0/public/OHLC
+ * Input:
+ *   pair = asset pair to get OHLC data for
+ *   interval = time frame interval in minutes (optional):
+ *   1 (default), 5, 15, 30, 60, 240, 1440, 10080, 21600
+ *   since = return committed OHLC data since given id (optional.  exclusive)
+ * Result: array of pair name and OHLC data
+ *   <pair_name> = pair name
+ *      array of array entries(<time>, <open>, <high>, <low>, <close>, <vwap>, <volume>, <count>)
+ *   last = id to be used as since when polling for new, committed OHLC data
+ * Note: the last entry in the OHLC array is for the current, not-yet-committed frame and will always be present, regardless of the value of "since".
+ * 
+ * 
+ * For applications that require additional OHLC or tick data, it is possible to retrieve the entire trading history of our markets (the 
+ * historical time and sales) via the REST API Trades endpoint. The OHLC for any time frame and any interval can then be created from the
+ * historical time and sales data.
+ * 
+ * For example, a call to the Trades endpoint such as https://api.kraken.com/0/public/Trades?pair=xbtusd&since=1559347200000000000 would 
+ * return the historical time and sales for XBT/USD from the 1st of June 2019 at 00:00:00 UTC:
+ * {"error":[],"result":{"XXBTZUSD":[["8552.90000","0.03190270",1559347203.7998,"s","m",""],["8552.90000","0.03155529",1559347203.8086,"s","m",""],["8552.90000","0.00510797",1559347203.9664,"s","m",""],["8552.90000","0.09047336",1559347203.9789,"s","m",""],["8552.90000","0.00328738",1559347203.9847,"s","m",""],["8552.90000","0.00492152",1559347203.9897,"s","m",""],["8552.90000","0.00201848",1559347203.9937,"s","m",""],["8552.90000","0.11422068",1559347203.9993,"s","m",""],["8552.90000","0.00425858",1559347204.071,"s","m",""],["8552.90000","0.00427679",1559347204.0762,"s","m",""],["8552.90000","0.06381401",1559347204.1662,"s","m",""]
+ * ...
+ * ["8579.50000","0.05379597",1559350785.248,"s","l",""],["8579.50000","0.94620403",1559350785.2936,"s","l",""],["8578.10000","0.45529068",1559350785.297,"s","l",""]],"last":"1559350785297011117"}}
+ * 
+ * Subsequent calls to the Trades endpoint should replace the since parameter's value with the last parameter's value from the results of the previous call such as https://api.kraken.com/0/public/Trades?pair=xbtusd&since=1559350785297011117.
+ * 
+ * Using the special since value of 0 (zero) would return the historical time and sales from the beginning of the market (starting with the very first trade). 
+ * 
+ * Get recent trades
+ * URL: https://api.kraken.com/0/public/Trades
+ * Input:
+ *   pair = asset pair to get trade data for
+ *   since = return trade data since given id (optional.  exclusive)
+ * Result: array of pair name and recent trade data
+ *   <pair_name> = pair name
+ *      array of array entries(<price>, <volume>, <time>, <buy/sell>, <market/limit>, <miscellaneous>)
+ *   last = id to be used as since when polling for new trade data
+ */
+router.get('/prices', function (req, res, next) {
+    let reqId = uuidv1();
 
-exports.getAvailableTestPrices = async function(){
-    return await 
-}
-*/
+    // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+    var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
+
+    let dataToShow = {
+        "title" : "Analysis",
+        "subtitle": "Click and drag in the chart to zoom in and inspect the data on Y axis.",
+        "yAxisTitle" : "Price",
+        "yAxisDesc" : "Price",
+        "xAxisTitle" : "Timestamp",
+        "xAxisDesc" : "Date times in ISO format",
+        "xAxisCategories" : "[]",  /// array amb els timestamps
+        "tooltipValueSuffix" : "€",
+        "series" : {}
+    }
+
+    try {
+        // Si està definit les req.query per fer una crida a kraken ho fem i passem les dades al template per mostrar-les
+        if (req.query.exchange && req.query.pair && req.query.interval) {
+            // 'https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=5'
+            let url = req.query.exchange + "?pair=" + req.query.pair + "&interval=" + req.query.interval;
+            https.get(url, (resp) => {
+                let data = [];
+
+                // A chunk of data has been received.
+                resp.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                // The whole response has been received. Print out the result.
+                resp.on('end', () => {
+                    //console.log(data);
+
+                    // Retornem de la funció principal
+                    let jsonReceived = JSON.parse(data);
+
+                    // Convertim el json obtingut de kraken a un json que es pugui mostrar a la gràfica highcharts
+                    // Com que no sabem el nom del pair obtingut accedim a la primera propietat de l'objecte
+                    // let dataWithChartFormat = jsonReceived.result.XXBTZEUR.map(function(element) {
+                    let dataWithChartFormat = jsonReceived.result[Object.keys(jsonReceived.result)[0]].map(function(element) {
+                        return [
+                            element[0],
+                            parseFloat(element[1]),
+                            parseFloat(element[2]),
+                            parseFloat(element[3]),
+                            parseFloat(element[4])
+                        ];
+                    });
+
+                    //console.log(dataWithChartFormat);
+
+                    dataToShow.series = dataWithChartFormat;
+                });
+            }).on('error', (err) => {
+                logger.error("Error in GET to krakenapi ", err);
+            });
+        }
+
+        res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, 
+            exchanges : EXCHANGES, pairs : KRAKEN_PAIRS_FIAT_CRYPTO, intervals : KRAKEN_INTERVALS, data : dataToShow 
+        });
+    } catch (e) {
+        logger.error(e);
+        res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, m_alert: e.message,
+            data : dataToShow
+        });
+    }
+});
+
+
 module.exports = router;
 
