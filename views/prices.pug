@@ -47,10 +47,10 @@ block content
         fieldset
           form(action='prices', method='post')
             | Data range to save: &nbsp;
-            input#start-date(type='date' name='start-date' value='2018-06-12' min='2018-06-07' max='2018-06-14')
-            input#start-time(type='time' name='start-time' value='19:30' min='00:00' max='24:00')
-            input#end-date(type='date' name='end-date' value='2019-06-12' min='2019-06-01' max='2019-06-14')
-            input#end-time(type='time' name='end-time' value='19:30' min='00:00' max='24:00')
+            input#start-date(type='date' name='start-date' value=data.startDate min=data.startDate max=data.endDate)
+            input#start-time(type='time' name='start-time' value=data.startTime min='00:00' max='24:00')
+            input#end-date(type='date' name='end-date' value=data.endDate min=data.startDate max=data.endDate)
+            input#end-time(type='time' name='end-time' value=data.endTime min='00:00' max='24:00')
             input.ghost-button(name='btn', type='submit', value='SavePrices')
 
     figure.highcharts-figure

@@ -417,7 +417,11 @@ router.get('/prices', function (req, res, next) {
         "xAxisDesc" : "Date times in ISO format",
         "xAxisCategories" : "[]",  /// array amb els timestamps
         "tooltipValueSuffix" : "€",
-        "series" : ""
+        "series" : "",
+        "startDate" : "",
+        "startTime" : "",
+        "endDate" : "",
+        "endTime" : ""
     }
 
     try {
@@ -457,6 +461,16 @@ router.get('/prices', function (req, res, next) {
 
                     dataToShow.series = JSON.stringify(dataWithChartFormat);
                     //dataToShow.series = dataWithChartFormat;
+                    
+                    if (dataWithChartFormat.length > 0){
+                        let startDate = new Date(dataWithChartFormat[0][0]);
+                        let endDate = new Date(dataWithChartFormat[dataWithChartFormat.length - 1][0]);
+
+                        dataToShow.startDate = startDate.toISOString().substring(0, 10);   //2011-10-05T14:48:00.000Z
+                        dataToShow.startTime = startDate.toISOString().substring(11, 19);
+                        dataToShow.endDate = endDate.toISOString().substring(0, 10);
+                        dataToShow.endTime = endDate.toISOString().substring(11, 19);
+                    }
 
                     res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, 
                         exchanges : EXCHANGES, pairs : KRAKEN_PAIRS_FIAT_CRYPTO, intervals : KRAKEN_INTERVALS, data : dataToShow 
