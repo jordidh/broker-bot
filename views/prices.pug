@@ -41,7 +41,7 @@ block content
                 option(value=interval) #{interval}
           input.ghost-button(name='btn', type='submit', value='GetPrices')
 
-  if data.series
+  if data.series != ""
     p Save prices to test
       .container
         fieldset
@@ -53,43 +53,43 @@ block content
             input#end-time(type='time' name='end-time' value='19:30' min='00:00' max='24:00')
             input.ghost-button(name='btn', type='submit', value='SavePrices')
 
-  figure.highcharts-figure
-  #container(style='height: 620px; min-width: 310px')
-  p.highcharts-description
+    figure.highcharts-figure
+    #container(style='height: 620px; min-width: 310px')
+    p.highcharts-description
 
-  script(type='text/javascript').
-    // create the chart
-    Highcharts.stockChart('container', {
+    script(type='text/javascript').
+      // create the chart
+      Highcharts.stockChart('container', {
 
-      rangeSelector: {
-        selected: 2
-      },
-
-      title: {
-        text: "#{data.title}"
-      },
-
-      subtitle: {
-          text: '#{data.subtitle}'
-      },
-
-      legend: {
-        enabled: true
-      },
-
-      plotOptions: {
-        series: {
-            showInLegend: true
+        rangeSelector: {
+          selected: 2
         },
-        candlestick: {
-            // shared options for all candlestick series
-        }
-      },
 
-      series: [{
-        type: 'candlestick',
-        id: 'aapl',
-        name: '#{data.yAxisTitle}',
-        data: !{data.series},
-      }]
-    });
+        title: {
+          text: "#{data.title}"
+        },
+
+        subtitle: {
+            text: '#{data.subtitle}'
+        },
+
+        legend: {
+          enabled: true
+        },
+
+        plotOptions: {
+          series: {
+              showInLegend: true
+          },
+          candlestick: {
+              // shared options for all candlestick series
+          }
+        },
+
+        series: [{
+          type: 'candlestick',
+          id: 'aapl',
+          name: '#{data.yAxisTitle}',
+          data: !{data.series},
+        }]
+      });

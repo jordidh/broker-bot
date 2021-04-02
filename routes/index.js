@@ -417,7 +417,7 @@ router.get('/prices', function (req, res, next) {
         "xAxisDesc" : "Date times in ISO format",
         "xAxisCategories" : "[]",  /// array amb els timestamps
         "tooltipValueSuffix" : "€",
-        "series" : {}
+        "series" : ""
     }
 
     try {
