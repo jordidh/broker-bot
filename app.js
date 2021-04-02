@@ -8,7 +8,6 @@ var cors = require('cors');
 var app = new express();
 var logger = require('./api/logger');
 var index = require('./routes/index');
-var data = require('./routes/data');
 
 // Database
 var BotPersistentData = require('./api/database/botPersistentData');
@@ -49,7 +48,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //app.use('/log', log);
 app.use('/', index);
-app.use('/data/', data);
 
 //extractUserStats.getVersion();
 

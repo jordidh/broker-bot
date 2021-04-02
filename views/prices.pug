@@ -41,14 +41,17 @@ block content
                 option(value=interval) #{interval}
           input.ghost-button(name='btn', type='submit', value='GetPrices')
 
-  p Save prices to test
-    .container
-      fieldset
-        form(action='prices', method='post')
-          | Data range to save: &nbsp;
-          input#start-time(type='datetime-local' name='start-time' value='2018-06-12T19:30' min='2018-06-07T00:00' max='2018-06-14T00:00')
-          input#end-time(type='datetime-local' name='end-time' value='2019-06-12T19:30' min='2019-06-07T00:00' max='2019-06-14T00:00')
-          input.ghost-button(name='btn', type='submit', value='SavePrices')
+  if data.series
+    p Save prices to test
+      .container
+        fieldset
+          form(action='prices', method='post')
+            | Data range to save: &nbsp;
+            input#start-date(type='date' name='start-date' value='2018-06-12' min='2018-06-07' max='2018-06-14')
+            input#start-time(type='time' name='start-time' value='19:30' min='00:00' max='24:00')
+            input#end-date(type='date' name='end-date' value='2019-06-12' min='2019-06-01' max='2019-06-14')
+            input#end-time(type='time' name='end-time' value='19:30' min='00:00' max='24:00')
+            input.ghost-button(name='btn', type='submit', value='SavePrices')
 
   figure.highcharts-figure
   #container(style='height: 620px; min-width: 310px')
