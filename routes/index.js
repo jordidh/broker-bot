@@ -409,10 +409,10 @@ router.get('/prices', function (req, res, next) {
     logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
 
     let dataToShow = {
-        "title" : "Analysis",
-        "subtitle": "Click and drag in the chart to zoom in and inspect the data on Y axis.",
-        "yAxisTitle" : "Price",
-        "yAxisDesc" : "Price",
+        "title" : "Pair " + req.query.pair + " interval " + req.query.interval,
+        "subtitle": "Get from " + req.query.exchange,
+        "yAxisTitle" : req.query.pair,
+        "yAxisDesc" : "Price " + req.query.pair,
         "xAxisTitle" : "Timestamp",
         "xAxisDesc" : "Date times in ISO format",
         "xAxisCategories" : "[]",  /// array amb els timestamps
@@ -445,7 +445,7 @@ router.get('/prices', function (req, res, next) {
                     // let dataWithChartFormat = jsonReceived.result.XXBTZEUR.map(function(element) {
                     let dataWithChartFormat = jsonReceived.result[Object.keys(jsonReceived.result)[0]].map(function(element) {
                         return [
-                            element[0],
+                            element[0] * 1000,  // multipliquem el time unixepoch per 1000 ja que highcharts ho necessita em ms i kraken ho envia per segos
                             parseFloat(element[1]),
                             parseFloat(element[2]),
                             parseFloat(element[3]),
@@ -455,16 +455,25 @@ router.get('/prices', function (req, res, next) {
 
                     //console.log(dataWithChartFormat);
 
-                    dataToShow.series = dataWithChartFormat;
+                    dataToShow.series = JSON.stringify(dataWithChartFormat);
+                    //dataToShow.series = dataWithChartFormat;
+
+                    res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, 
+                        exchanges : EXCHANGES, pairs : KRAKEN_PAIRS_FIAT_CRYPTO, intervals : KRAKEN_INTERVALS, data : dataToShow 
+                    });
                 });
             }).on('error', (err) => {
                 logger.error("Error in GET to krakenapi ", err);
+                res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, 
+                    exchanges : EXCHANGES, pairs : KRAKEN_PAIRS_FIAT_CRYPTO, intervals : KRAKEN_INTERVALS, data : dataToShow,
+                    m_alert: err.message
+                });
+            });
+        } else {
+            res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, 
+                exchanges : EXCHANGES, pairs : KRAKEN_PAIRS_FIAT_CRYPTO, intervals : KRAKEN_INTERVALS, data : dataToShow 
             });
         }
-
-        res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, 
-            exchanges : EXCHANGES, pairs : KRAKEN_PAIRS_FIAT_CRYPTO, intervals : KRAKEN_INTERVALS, data : dataToShow 
-        });
     } catch (e) {
         logger.error(e);
         res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, m_alert: e.message,

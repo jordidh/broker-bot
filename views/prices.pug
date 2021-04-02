@@ -6,6 +6,17 @@ block variables
     - var msgInfo = m_info
     - var msgWarning = m_warning
 
+block extraScripts
+  script(src='https://code.highcharts.com/stock/highstock.js')
+  script(src='https://code.highcharts.com/stock/modules/data.js')
+  script(src='https://code.highcharts.com/stock/modules/exporting.js')
+  script(src="https://code.highcharts.com/stock/indicators/indicators.js")
+  script(src="https://code.highcharts.com/stock/indicators/ema.js")
+  script(src="https://code.highcharts.com/stock/indicators/dema.js")
+
+block extraStyles
+  link(rel='stylesheet' href='stylesheets/analysis.css')
+
 block content
   h1 #{name} V #{version}
 
@@ -30,93 +41,52 @@ block content
                 option(value=interval) #{interval}
           input.ghost-button(name='btn', type='submit', value='GetPrices')
 
+  p Save prices to test
+    .container
+      fieldset
+        form(action='prices', method='post')
+          | Data range to save: &nbsp;
+          input#start-time(type='datetime-local' name='start-time' value='2018-06-12T19:30' min='2018-06-07T00:00' max='2018-06-14T00:00')
+          input#end-time(type='datetime-local' name='end-time' value='2019-06-12T19:30' min='2019-06-07T00:00' max='2019-06-14T00:00')
+          input.ghost-button(name='btn', type='submit', value='SavePrices')
+
   figure.highcharts-figure
   #container(style='height: 620px; min-width: 310px')
   p.highcharts-description
-    | Description
 
   script(type='text/javascript').
     // create the chart
-    var colors = Highcharts.getOptions().colors;
+    Highcharts.stockChart('container', {
 
-    Highcharts.chart('container', {
-      chart: {
-        type: 'spline',
-        zoomType: 'y'
-      },
-
-      legend: {
-        symbolWidth: 40
+      rangeSelector: {
+        selected: 2
       },
 
       title: {
-        //text: 'Most common desktop screen readers'
         text: "#{data.title}"
       },
 
       subtitle: {
-        text: '#{data.subtitle}'
+          text: '#{data.subtitle}'
       },
 
-      yAxis: {
-        title: {
-          text: '#{data.yAxisTitle}'
-        },
-        accessibility: {
-          description: '#{data.yAxisDesc}'
-        }
-      },
-
-      xAxis: {
-        title: {
-          text: '#{data.xAxisTitle}'
-        },
-        accessibility: {
-          description: '#{data.xAxisDesc}'
-        },
-        categories: !{data.xAxisCategories}
-      },
-
-      tooltip: {
-        valueSuffix: '#{data.tooltipValueSuffix}'
+      legend: {
+        enabled: true
       },
 
       plotOptions: {
         series: {
-          point: {
-            events: {
-              click: function () {
-                window.location.href = this.series.options.website;
-              }
-            }
-          },
-          cursor: 'pointer'
+            showInLegend: true
+        },
+        candlestick: {
+            // shared options for all candlestick series
         }
       },
 
-      series: !{data.series},
-
-      responsive: {
-        rules: [{
-          condition: {
-            maxWidth: 550
-          },
-          chartOptions: {
-            chart: {
-              spacingLeft: 3,
-              spacingRight: 3
-            },
-            legend: {
-              itemWidth: 150
-            },
-            xAxis: {
-              categories: !{data.xAxisCategories},
-              title: ''
-            },
-            yAxis: {
-              visible: false
-            }
-          }
-        }]
-      }
+      series: [{
+        type: 'candlestick',
+        id: 'aapl',
+        name: '#{data.yAxisTitle}',
+        data: !{data.series},
+      }]
     });
