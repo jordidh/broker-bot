@@ -496,6 +496,68 @@ router.get('/prices', function (req, res, next) {
     }
 });
 
+router.post('/prices', async function (req, res, next) {
+    let reqId = uuidv1();
+
+    // Enviem missatge al telegram de l'usuari per indicar que hem rebut un post
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+    var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    logger.info(reqId + `: Rebut GET des de ` + ip + ` : ` + fullUrl);
+    
+    let dataToShow = {
+        "title" : "Pair " + req.query.pair + " interval " + req.query.interval,
+        "subtitle": "Get from " + req.query.exchange,
+        "yAxisTitle" : req.query.pair,
+        "yAxisDesc" : "Price " + req.query.pair,
+        "xAxisTitle" : "Timestamp",
+        "xAxisDesc" : "Date times in ISO format",
+        "xAxisCategories" : "[]",  /// array amb els timestamps
+        "tooltipValueSuffix" : "€",
+        "series" : req.body.series,
+        "startDate" : req.body.startDate,
+        "startTime" : req.body.startTime,
+        "endDate" : req.body.endDate,
+        "endTime" : req.body.endTime
+    }
+
+    try {
+        // Guardem les dades, entre el rang definit en un fitxer per poder testejar diferents estrategies
+
+        // Convert to 2011-10-05T14:48:00.000Z
+        let startDate = new Date(req.body.startDate + "T" + req.body.startTime + ":00.000Z");
+        let startDateEpoch = startDate.getTime();
+        let endDate = new Date(req.body.endDate + "T" + req.body.endTime + ":00.000Z");
+        let endDateEpoch = endDate.getTime();
+
+        let series = JSON.parse(req.body.series);
+        let seriesToSave = [];
+        let numDataSaved = 0;
+        for (let i = 0; i < series.length; i++) {
+            if (series[i][0] >= startDateEpoch && series[i][0] <= endDateEpoch) {
+                seriesToSave.push(series[i]);
+                numDataSaved++;
+            }
+        }
+        let seriesToSaveString = JSON.stringify(series);
+
+        let filename = req.body.filename;
+        if (!filename.endsWith(".json")) {
+            filename += ".json";
+        }
+
+        const rawPrices = await fs.writeFile(TEST_DATA_PATH + "/" + filename, seriesToSaveString, "ascii");
+
+        res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, 
+            m_success: "Data saved to test file successfully. Points saved = " + numDataSaved, data : dataToShow
+        });
+    } catch (e) {
+        logger.error(e);
+        res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, m_alert: e.message,
+            data : dataToShow
+        });
+    }
+});
 
 module.exports = router;
 

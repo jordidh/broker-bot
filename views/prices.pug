@@ -42,15 +42,18 @@ block content
           input.ghost-button(name='btn', type='submit', value='GetPrices')
 
   if data.series != ""
-    p Save prices to test
+    p Save prices to test file
       .container
         fieldset
           form(action='prices', method='post')
             | Data range to save: &nbsp;
-            input#start-date(type='date' name='start-date' value=data.startDate min=data.startDate max=data.endDate)
-            input#start-time(type='time' name='start-time' value=data.startTime min='00:00' max='24:00')
-            input#end-date(type='date' name='end-date' value=data.endDate min=data.startDate max=data.endDate)
-            input#end-time(type='time' name='end-time' value=data.endTime min='00:00' max='24:00')
+            input.ghost-input(type='hidden', name='series', value=data.series)
+            input#startDate(type='date' name='startDate' value=data.startDate min=data.startDate max=data.endDate)
+            input#startTime(type='time' name='startTime' value=data.startTime min='00:00' max='24:00')
+            input#endDate(type='date' name='endDate' value=data.endDate min=data.startDate max=data.endDate)
+            input#endTime(type='time' name='endTime' value=data.endTime min='00:00' max='24:00')
+            | &nbsp; file name: &nbsp;
+            input#filename(type="text" name="filename" minlength="8" maxlength="50" required='' placeholder='length: min 8, max 50')
             input.ghost-button(name='btn', type='submit', value='SavePrices')
 
     figure.highcharts-figure
