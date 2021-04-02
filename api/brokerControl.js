@@ -211,11 +211,22 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
             
             //currentIndicator.update(price[priceIndex]);
 
-            if (index >= period - 1 && currentIndicator.isStable) {
-            //if (currentIndicator.isStable) {
-                result[index] = [prices[index][timeIndex], currentIndicator.getResult().toNumber()];
-            } else {
-                result[index] = [prices[index][timeIndex], 0];
+            switch(indicator) {
+                case "BBANDS":
+                    if (index >= period - 1 && currentIndicator.isStable) {
+                        const {middle, upper, lower} = currentIndicator.getResult();
+                        result[index] = [prices[index][timeIndex], { middle : middle, upper : upper, lower : lower} ];
+                    } else {
+                        result[index] = [prices[index][timeIndex], { middle : 0, upper : 0, lower : 0} ];
+                    }
+                    break;
+                default:
+                    if (index >= period - 1 && currentIndicator.isStable) {
+                        result[index] = [prices[index][timeIndex], currentIndicator.getResult().toNumber()];
+                    } else {
+                        result[index] = [prices[index][timeIndex], 0];
+                    }
+                    break;
             }
 
 
@@ -341,7 +352,7 @@ exports.checkAndDecide = async function(market, lastData, prices, decisionMaker)
     let action = "relax";
 
     // Si lastData té valor comparem per determinar quina acció prenem
-    if (lastData && lastData.indicatorValues && Array.isArray(lastData.indicatorValues) && lastData.indicatorValues.length > 1) {
+    if (lastData && lastData.indicatorValues && Array.isArray(lastData.indicatorValues) && lastData.indicatorValues.length > 0) {
         try {
             action = decisionMaker.decide(market, lastData, currentData);
         } catch(exDecisor) {

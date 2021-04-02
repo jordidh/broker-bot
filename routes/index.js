@@ -19,6 +19,7 @@ const brokerControl = require('../api/brokerControl');
 
 const decisionMakerDemax2 = require('../api/decisionMakers/demax2');
 const decisionMakerEmax2AdxMacd = require('../api/decisionMakers/emax2-adx-macd');
+const decisionMakerBBands = require('../api/decisionMakers/bbands');
 
 const colors = ['#2f7ed8', '#0d233a', '#8bbc21', '#910000', '#1aadce',
 '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a'];
@@ -185,6 +186,9 @@ router.get('/analysis', async function (req, res, next) {
                     break;
                 case "emax2-adx-macd":
                     decisionMaker = decisionMakerEmax2AdxMacd;
+                    break;
+                case "bbands":
+                    decisionMaker = decisionMakerBBands;
                     break;
                 default:
                     console.error("Market strategy is not valid \"" + market.strategy + "\"");
