@@ -553,6 +553,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
 
         // Inicialitzem el valor de lastData
         let lastData = { };
+        let lastDecision = "";
 
         // Executem el checkAndDecide per cada price i guardem les dades resultants
         // per analitzarles posteriorment
@@ -579,6 +580,16 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
             }
 
             //console.log(decision);
+
+            // Si l'última decisió és igual que l'actual, la marquem com a relax, per no comprar o vendre dos cops consecutivament
+            if (decision.result.currentData.decision === "buy" || decision.result.currentData.decision === "sell") {
+                if (decision.result.currentData.decision === lastDecision) {
+                    // Si l'última decisió és igual que l'actual la posem com "relax"
+                decision.result.currentData.decision = "relax";
+                } else {
+                    lastDecision = decision.result.currentData.decision;
+                }
+            }
 
             // Calculem beneficis
             switch (decision.result.currentData.decision) {
