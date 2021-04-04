@@ -20,6 +20,8 @@ const brokerControl = require('../api/brokerControl');
 const decisionMakerDemax2 = require('../api/decisionMakers/demax2');
 const decisionMakerEmax2AdxMacd = require('../api/decisionMakers/emax2-adx-macd');
 const decisionMakerBBands = require('../api/decisionMakers/bbands');
+const decisionMakerMacd = require('../api/decisionMakers/macd');
+const { ExceptionHandler } = require('winston');
 
 const colors = ['#2f7ed8', '#0d233a', '#8bbc21', '#910000', '#1aadce',
 '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a'];
@@ -190,12 +192,19 @@ router.get('/analysis', async function (req, res, next) {
                 case "bbands":
                     decisionMaker = decisionMakerBBands;
                     break;
+                case "macd":
+                    decisionMaker = decisionMakerMacd;
+                    break;
                 default:
                     console.error("Market strategy is not valid \"" + market.strategy + "\"");
                     break;
             }
 
             lastData = await brokerControl.analizeStrategy("B1", 1, funds, comission, market, prices, decisionMaker);
+
+            if (lastData.error.length > 0) {
+                throw new Error(lastData.error[0]);
+            }
 
         } else {
             // Si no s'indica agafar les dades de prices de test s'agafen de la BD
@@ -267,10 +276,10 @@ router.get('/analysis', async function (req, res, next) {
 
                 if (lastData.result.data[i].indicatorValues[j].name === "BBANDS") {
                     let serieName = lastData.result.data[i].indicatorValues[j].name + lastData.result.data[i].indicatorValues[j].period;
-                    let serieFound = series.find(o => o.name === serieName);
+                    let serieFound = series.find(o => o.name.startsWith(serieName));
                     if (typeof serieFound === "undefined") {
                         series.push({
-                            "name" : serieName,
+                            "name" : serieName + "-middle",
                             "data" : [ ],
                             "color" : colors[color],
                             "website" : "",
@@ -279,7 +288,7 @@ router.get('/analysis', async function (req, res, next) {
                         color++;
 
                         series.push({
-                            "name" : serieName,
+                            "name" : serieName + "-lower",
                             "data" : [ ],
                             "color" : colors[color],
                             "website" : "",
@@ -288,11 +297,42 @@ router.get('/analysis', async function (req, res, next) {
                         color++;
 
                         series.push({
-                            "name" : serieName,
+                            "name" : serieName + "-upper",
                             "data" : [ ],
                             "color" : colors[color],
                             "website" : "",
                             "description" : "upper"
+                        });
+                        color++;
+                    }
+                } else if (lastData.result.data[i].indicatorValues[j].name === "MACD") {
+                    let serieName = lastData.result.data[i].indicatorValues[j].name;
+                    let serieFound = series.find(o => o.name.startsWith(serieName));
+                    if (typeof serieFound === "undefined") {
+                        series.push({
+                            "name" : serieName + "-hist.",
+                            "data" : [ ],
+                            "color" : colors[color],
+                            "website" : "",
+                            "description" : "histogram"
+                        });
+                        color++;
+
+                        series.push({
+                            "name" : serieName + "-macd",
+                            "data" : [ ],
+                            "color" : colors[color],
+                            "website" : "",
+                            "description" : "macd"
+                        });
+                        color++;
+
+                        series.push({
+                            "name" : serieName + "-signal",
+                            "data" : [ ],
+                            "color" : colors[color],
+                            "website" : "",
+                            "description" : "signal"
                         });
                         color++;
                     }
@@ -343,7 +383,7 @@ router.get('/analysis', async function (req, res, next) {
                     // De les dades trobades ens quedem amb el primer indicador que pertanyi a la serie
                     for (let j = 0; j < dataFound.length; j++) {
                         if (series[s].name.startsWith("BBANDS")) {
-                            let indicatorFound = dataFound[j].indicatorValues.find(o => (o.name + o.period) === series[s].name);
+                            let indicatorFound = dataFound[j].indicatorValues.find(o => series[s].name.startsWith(o.name + o.period));
                             if (indicatorFound) {
                                 switch(series[s].description) {
                                     case "middle":
@@ -354,6 +394,21 @@ router.get('/analysis', async function (req, res, next) {
                                         break;
                                     case "upper":
                                         series[s].data[i] = indicatorFound.value.upper;
+                                        break;
+                                }
+                            }
+                        } else if (series[s].name.startsWith("MACD")) {
+                            let indicatorFound = dataFound[j].indicatorValues.find(o => series[s].name.startsWith(o.name));
+                            if (indicatorFound) {
+                                switch(series[s].description) {
+                                    case "histogram":
+                                        series[s].data[i] = indicatorFound.value.histogram;
+                                        break;
+                                    case "macd":
+                                        series[s].data[i] = indicatorFound.value.macd;
+                                        break;
+                                    case "signal":
+                                        series[s].data[i] = indicatorFound.value.signal;
                                         break;
                                 }
                             }

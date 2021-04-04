@@ -113,12 +113,16 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
             case "ADX": 
                 // Average Directional Index (ADX)
                 // El ADX oscila entre 0 y 100
-                // Com s'utilitza: Cuando el ADX es mayor que 30, el mercado se encuentra en una tendencia fuerte, 
-                //                 cuando está entre 20 y 30 no está bien definido y cuando es menor a 20 indica 
-                //                 que el mercado está en rango. Las formas más comunes de utilizar el ADX son:
-                // Conocer la fuerza de una tendencia: Cuando el ADX tiene pendiente positiva y/o se sitúa en niveles entre 30 y 40 indica fortaleza de tendencia. En movimientos de tendencia fuerte (ya sea alcista o bajista) el especulador aprovecha las correcciones a la baja (en tendencia alcista) para comprar el valor y los rebotes (en tendencia bajista).
-                // Para saber cuando un rango llega a su fin: Cuando el ADX se encuentra por debajo de 20-30 y/o se encuentra entre las líneas de movimiento direccional. Con los precios en rango, los especuladores compran en la parte inferior y venden en la superior, el ADX les permite saber cuando ese rango se termina. Además, la señal de que un rango termina significa que comienza una nueva tendencia, por lo que especulador solo tendrá que subirse a ésta.
-                // Determinar cambios de tendencia: Cuando existen divergencias demasiado altas (por encima de 45-50) quiere decir que la tendencia se está agotando o está perdiendo fuerza. Por lo que probablemente se tome un respiro. Por el contrario, cuando estas divergencias se encuentran por encima de 30, pero en lecturas no muy altas entendemos que la tendencia se está fortaleciendo.
+                // Com s'utilitza: 
+                //      Cuando el ADX es mayor que 30, el mercado se encuentra en una tendencia fuerte, 
+                //      cuando está entre 20 y 30 no está bien definido y cuando es menor a 20 indica 
+                //      que el mercado está en rango. Las formas más comunes de utilizar el ADX son:
+                //          1. Conocer la fuerza de una tendencia: Cuando el ADX tiene pendiente positiva y/o se sitúa en niveles entre 30 y 40 indica fortaleza de tendencia. En movimientos de tendencia fuerte (ya sea alcista o bajista) el especulador aprovecha las correcciones a la baja (en tendencia alcista) para comprar el valor y los rebotes (en tendencia bajista).
+                //          2. Para saber cuando un rango llega a su fin: Cuando el ADX se encuentra por debajo de 20-30 y/o se encuentra entre las líneas de movimiento direccional. Con los precios en rango, los especuladores compran en la parte inferior y venden en la superior, el ADX les permite saber cuando ese rango se termina. Además, la señal de que un rango termina significa que comienza una nueva tendencia, por lo que especulador solo tendrá que subirse a ésta.
+                //          3. Determinar cambios de tendencia: Cuando existen divergencias demasiado altas (por encima de 45-50) quiere decir que la tendencia se está agotando o está perdiendo fuerza. Por lo que probablemente se tome un respiro. Por el contrario, cuando estas divergencias se encuentran por encima de 30, pero en lecturas no muy altas entendemos que la tendencia se está fortaleciendo.
+                // Per ADX es necessari proporcionar high price, low price i price at close
+                // Ex: adxi.update({"high": 30.1983, "low": 29.4072, "close": 29.872});
+                // "high" = price[priceIndex - 2], "low" : price[priceIndex - 1], "close" : price[priceIndex]
                 if (isNaN(parseInt(period)) || parseInt(period) != period) {
                     return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
                 }
@@ -212,6 +216,15 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
             //currentIndicator.update(price[priceIndex]);
 
             switch(indicator) {
+                case "MACD":
+                    // Pel motiu que sigui pel MACD no mirem si es estable
+                    // getResult() retorna l'objecte { histogram: N, macd : M, signal : L }
+                    let values = currentIndicator.getResult();
+                    result[index] = [prices[index][timeIndex], { 
+                        histogram : values.histogram.toNumber(),
+                        macd : values.macd.toNumber(), 
+                        signal : values.signal.toNumber() } ];
+                    break;
                 case "BBANDS":
                     if (index >= period - 1 && currentIndicator.isStable) {
                         const {middle, upper, lower} = currentIndicator.getResult();
@@ -529,8 +542,17 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
         // array de prices
         let maxPeriod = 0;
         for (let i = 0; i < market.indicator.length; i++) {
-            if (market.indicator[i].period > maxPeriod) {
-                maxPeriod = market.indicator[i].period;
+            switch(market.indicator[i].name) {
+                case "MACD":
+                    if (market.indicator[i].period.longInterval > maxPeriod) {
+                        maxPeriod = market.indicator[i].period.longInterval;
+                    }
+                    break;
+                default:
+                    if (market.indicator[i].period > maxPeriod) {
+                        maxPeriod = market.indicator[i].period;
+                    }
+                    break;
             }
         }
 

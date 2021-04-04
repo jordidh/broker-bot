@@ -167,6 +167,194 @@ describe('BrokerControl.applyIndicator()', () =>  {
         
         expect(result).to.deep.equal(demaExpected);
     });
+
+    it('calculates ADX successfully', async () => {
+        // Average Directional Index (ADX)
+        // El ADX oscila entre 0 y 100
+        // Com s'utilitza: 
+        //      Cuando el ADX es mayor que 30, el mercado se encuentra en una tendencia fuerte, 
+        //      cuando está entre 20 y 30 no está bien definido y cuando es menor a 20 indica 
+        //      que el mercado está en rango. Las formas más comunes de utilizar el ADX son:
+        //          1. Conocer la fuerza de una tendencia: Cuando el ADX tiene pendiente positiva y/o se sitúa en niveles entre 30 y 40 indica fortaleza de tendencia. En movimientos de tendencia fuerte (ya sea alcista o bajista) el especulador aprovecha las correcciones a la baja (en tendencia alcista) para comprar el valor y los rebotes (en tendencia bajista).
+        //          2. Para saber cuando un rango llega a su fin: Cuando el ADX se encuentra por debajo de 20-30 y/o se encuentra entre las líneas de movimiento direccional. Con los precios en rango, los especuladores compran en la parte inferior y venden en la superior, el ADX les permite saber cuando ese rango se termina. Además, la señal de que un rango termina significa que comienza una nueva tendencia, por lo que especulador solo tendrá que subirse a ésta.
+        //          3. Determinar cambios de tendencia: Cuando existen divergencias demasiado altas (por encima de 45-50) quiere decir que la tendencia se está agotando o está perdiendo fuerza. Por lo que probablemente se tome un respiro. Por el contrario, cuando estas divergencias se encuentran por encima de 30, pero en lecturas no muy altas entendemos que la tendencia se está fortaleciendo.
+        // Per ADX es necessari proporcionar high price, low price i price at close
+        // Ex: adxi.update({"high": 30.1983, "low": 29.4072, "close": 29.872});
+        // "high" = price[priceIndex - 2], "low" : price[priceIndex - 1], "close" : price[priceIndex]
+        const prices = [
+            // time, high price, low price, price
+            [ 1552055400000, 30.1983, 29.4072, 29.872 ],
+            [ 1552055410000, 31.1983, 28.4072, 29.872 ],
+            [ 1552055420000, 32.1983, 27.4072, 28.872 ],
+            [ 1552055430000, 31.1983, 25.4072, 27.872 ],
+            [ 1552055440000, 32.1983, 23.4072, 28.872 ],
+            [ 1552055450000, 33.1983, 22.4072, 29.872 ],
+            [ 1552055460000, 35.1983, 24.4072, 28.872 ],
+            [ 1552055470000, 34.1983, 23.4072, 27.872 ],
+            [ 1552055480000, 35.1983, 25.4072, 28.872 ],
+            [ 1552055490000, 36.1983, 26.4072, 28.872 ],
+            [ 1552055500000, 37.1983, 24.4072, 29.872 ],
+            [ 1552055510000, 33.1983, 22.4072, 28.872 ],
+            [ 1552055520000, 34.1983, 21.4072, 29.872 ],
+            [ 1552055530000, 36.1983, 20.4072, 27.872 ],
+            [ 1552055540000, 38.1983, 22.4072, 26.872 ],
+            [ 1552055550000, 36.1983, 21.4072, 28.872 ],
+            [ 1552055560000, 34.1983, 24.4072, 29.872 ],
+            [ 1552055570000, 33.1983, 25.4072, 28.872 ],
+            [ 1552055580000, 32.1983, 22.4072, 28.872 ],
+            [ 1552055590000, 33.1983, 21.4072, 29.872 ],
+            [ 1552055600000, 34.1983, 20.4072, 27.872 ],
+            [ 1552055610000, 35.1983, 22.4072, 28.872 ],
+            [ 1552055620000, 37.1983, 23.4072, 29.872 ],
+            [ 1552055630000, 30.1983, 23.4072, 29.872 ]
+        ];
+
+        var demaExpected = {
+            "error" : [ ],
+            "result" : [
+                [ 1552055400000, 0 ],
+                [ 1552055410000, 0 ],
+                [ 1552055420000, 0 ],
+                [ 1552055430000, 0 ],
+                [ 1552055440000, 0 ],
+                [ 1552055450000, 0 ],
+                [ 1552055460000, 0 ],
+                [ 1552055470000, 0 ],
+                [ 1552055480000, 0 ],
+                [ 1552055490000, 0 ],
+                [ 1552055500000, 0 ],
+                [ 1552055510000, 0 ],
+                [ 1552055520000, 0 ],
+                [ 1552055530000, 0 ],
+                [ 1552055540000, 0 ],
+                [ 1552055550000, 0 ],
+                [ 1552055560000, 0 ],
+                [ 1552055570000, 0 ],
+                [ 1552055580000, 0 ],
+                [ 1552055590000, 19.95513536707172 ],
+                [ 1552055600000, 20.88377898833126 ],
+                [ 1552055610000, 20.385140761458732 ],
+                [ 1552055620000, 18.919813993160634 ],
+                [ 1552055630000, 17.601019901692347 ]
+            ]
+        };
+
+        let result = await brokerControl.applyIndicator(prices, "ADX", 10, 0, 3);
+        
+        expect(result).to.deep.equal(demaExpected);
+    });
+
+    it('calculates MACD successfully', async () => {
+        const prices = [
+            // time, price, 0, 0
+            [1, 41394.07, 0, 0],
+            [2, 41266.42, 0, 0],
+            [3, 41151.8, 0, 0],
+            [4, 41164.71, 0, 0],
+            [5, 40937.27, 0, 0],
+            [6, 40968.19, 0, 0],
+            [7, 40843.89, 0, 0],
+            [8, 40923.11, 0, 0],
+            [9, 40838.22, 0, 0],
+            [10, 40763.32, 0, 0],
+            [11, 40749.72, 0, 0],
+            [12, 41111.54, 0, 0],
+            [13, 41051.5, 0, 0],
+            [14, 40886.6, 0, 0],
+            [15, 40632.58, 0, 0],
+            [16, 40392.17, 0, 0],
+            [17, 40494.23, 0, 0],
+            [18, 40096.49, 0, 0],
+            [19, 39865.73, 0, 0],
+            [20, 40057.04, 0, 0],
+        ];
+
+        var demaExpected = {
+            "error" : [ ],
+            "result" : [ 
+                [ 1, { "histogram": 0, "macd": -1.2418221e-12, "signal": -1.2418221e-12 } ],
+                [ 2, { "histogram": -34.040000000000326, "macd": -42.55000000000165, "signal": -8.510000000001323 } ],     
+                [ 3, { "histogram": -57.797333333333704, "macd": -80.75666666666845, "signal": -22.95933333333475 } ],     
+                [ 4, { "histogram": -35.230755555555895, "macd": -66.99777777777962, "signal": -31.767022222223723} ],
+                [ 5, { "histogram": -74.47853037037065, "macd": -124.86518518518703, "signal": -50.38665481481638} ],
+                [ 6, { "histogram": -39.42677491358047, "macd": -99.67012345679198, "signal": -60.2433485432115} ],
+                [ 7, { "histogram": -42.48983145349812, "macd": -113.35563786008416, "signal": -70.86580640658603} ],
+                [ 8, { "histogram": 4.852601229519743, "macd": -64.80005486968635, "signal": -69.6526560992061} ],
+                [ 9, { "histogram": 1.3968610476304302, "macd": -67.90657978966806, "signal": -69.3034408372985} ],
+                [ 10, { "histogram": -7.335834740618409, "macd": -78.4732342630715, "signal": -71.1373995224531} ],
+                [ 11, { "histogram": 2.5769463923348224, "macd": -67.91621653203457, "signal": -70.49316292436939} ],
+                [ 12, { "histogram": 112.49768764952468, "macd": 70.12894663753646, "signal": -42.36874101198822} ],
+                [ 13, { "histogram": 86.06147750309223, "macd": 65.20810586687708, "signal": -20.85337163621516} ],
+                [ 14, { "histogram": 12.408480378022537, "macd": -5.342771163686989, "signal": -17.751251541709525} ],
+                [ 15, { "histogram": -69.40443451836045, "macd": -104.50679468966007, "signal": -35.10236017129964} ],
+                [ 16, { "histogram": -118.68305496336654, "macd": -183.45617887550782, "signal": -64.77312391214127} ],
+                [ 17, { "histogram": -49.15145824808733, "macd": -126.21244672225043, "signal": -77.06098847416311} ],
+                [ 18, { "histogram": -112.7707347983799, "macd": -218.024406972138, "signal": -105.25367217375808} ],
+                [ 19, { "histogram": -129.3148195325264, "macd": -266.89719658941607, "signal": -137.58237705688967} ],
+                [ 20, { "histogram": -13.675961053196914, "macd": -154.67732837338582, "signal": -141.0013673201889} ]
+            ]
+        };
+
+        let result = await brokerControl.applyIndicator(prices, "MACD", { "longInterval": 5, "shortInterval": 2, "signal": 9}, 0, 1);
+        
+        expect(result).to.deep.equal(demaExpected);
+    });
+
+    it('calculates BBAND successfully', async () => {
+        const prices = [
+            // time, price, 0, 0
+            [1, 41394.07, 0, 0],
+            [2, 41266.42, 0, 0],
+            [3, 41151.8, 0, 0],
+            [4, 41164.71, 0, 0],
+            [5, 40937.27, 0, 0],
+            [6, 40968.19, 0, 0],
+            [7, 40843.89, 0, 0],
+            [8, 40923.11, 0, 0],
+            [9, 40838.22, 0, 0],
+            [10, 40763.32, 0, 0],
+            [11, 40749.72, 0, 0],
+            [12, 41111.54, 0, 0],
+            [13, 41051.5, 0, 0],
+            [14, 40886.6, 0, 0],
+            [15, 40632.58, 0, 0],
+            [16, 40392.17, 0, 0],
+            [17, 40494.23, 0, 0],
+            [18, 40096.49, 0, 0],
+            [19, 39865.73, 0, 0],
+            [20, 40057.04, 0, 0],
+        ];
+
+        var demaExpected = {
+            "error" : [ ],
+            "result" : [ 
+                [ 1, { "lower": 0, "middle": 0, "upper": 0 } ],
+                [ 2, { "lower": 0, "middle": 0, "upper": 0 } ],
+                [ 3, { "lower": 0, "middle": 0, "upper": 0 } ],
+                [ 4, { "lower": 0, "middle": 0, "upper": 0 } ],
+                [ 5, { "lower": 0, "middle": 0, "upper": 0 } ],
+                [ 6, { "lower": 0, "middle": 0, "upper": 0 } ],
+                [ 7, { "lower": 0, "middle": 0, "upper": 0 } ],
+                [ 8, { "lower": 0, "middle": 0, "upper": 0 } ],
+                [ 9, { "lower": 0, "middle": 0, "upper": 0 } ],
+                [ 10, { "lower": 40631.36769022596, "middle": 41025.1, "upper": 41418.832309774036 } ],
+                [ 11, { "lower": 40622.588428407114, "middle": 40960.665, "upper": 41298.74157159289 } ],
+                [ 12, { "lower": 40653.548616738015, "middle": 40945.177, "upper": 41236.805383261984 } ],
+                [ 13, { "lower": 40666.6524622455, "middle": 40935.147, "upper": 41203.6415377545 } ],
+                [ 14, { "lower": 40686.29626145509, "middle": 40907.336, "upper": 41128.375738544906 } ],
+                [ 15, { "lower": 40603.03666522315, "middle": 40876.867, "upper": 41150.69733477684 } ],
+                [ 16, { "lower": 40428.947683935236, "middle": 40819.265, "upper": 41209.58231606476 } ],
+                [ 17, { "lower": 40349.013269891606, "middle": 40784.299, "upper": 41219.5847301084 } ],
+                [ 18, { "lower": 40115.40604503088, "middle": 40701.637, "upper": 41287.867954969115 } ],
+                [ 19, { "lower": 39844.20940304794, "middle": 40604.388, "upper": 41364.566596952056 } ],
+                [ 20, { "lower": 39716.66121605769, "middle": 40533.76, "upper": 41350.858783942305 } ] 
+            ]
+        };
+
+        let result = await brokerControl.applyIndicator(prices, "BBANDS", 10, 0, 1);
+        
+        expect(result).to.deep.equal(demaExpected);
+    });
 });
 
 describe('BrokerControl.analizeStrategy()', () => {
