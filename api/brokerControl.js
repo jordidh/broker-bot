@@ -215,7 +215,7 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
                 case "BBANDS":
                     if (index >= period - 1 && currentIndicator.isStable) {
                         const {middle, upper, lower} = currentIndicator.getResult();
-                        result[index] = [prices[index][timeIndex], { middle : middle, upper : upper, lower : lower} ];
+                        result[index] = [prices[index][timeIndex], { middle : middle.toNumber(), upper : upper.toNumber(), lower : lower.toNumber()} ];
                     } else {
                         result[index] = [prices[index][timeIndex], { middle : 0, upper : 0, lower : 0} ];
                     }
@@ -581,11 +581,11 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
 
             //console.log(decision);
 
-            // Si l'última decisió és igual que l'actual, la marquem com a relax, per no comprar o vendre dos cops consecutivament
+            // Si l'última decisió és igual que l'actual, la marquem com a relax, per no comprar o vendre dos cops consecutius
             if (decision.result.currentData.decision === "buy" || decision.result.currentData.decision === "sell") {
                 if (decision.result.currentData.decision === lastDecision) {
                     // Si l'última decisió és igual que l'actual la posem com "relax"
-                decision.result.currentData.decision = "relax";
+                    decision.result.currentData.decision = "relax";
                 } else {
                     lastDecision = decision.result.currentData.decision;
                 }

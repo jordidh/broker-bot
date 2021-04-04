@@ -264,17 +264,51 @@ router.get('/analysis', async function (req, res, next) {
             }
            
             for (let j = 0; j < lastData.result.data[i].indicatorValues.length; j++) {
-                let serieName = lastData.result.data[i].indicatorValues[j].name + lastData.result.data[i].indicatorValues[j].period;
-                let serieFound = series.find(o => o.name === serieName);
-                if (typeof serieFound === "undefined") {
-                    series.push({
-                        "name" : serieName,
-                        "data" : [ ],
-                        "color" : colors[color],
-                        "website" : "",
-                        "description" : serieName
-                    });
-                    color++;
+
+                if (lastData.result.data[i].indicatorValues[j].name === "BBANDS") {
+                    let serieName = lastData.result.data[i].indicatorValues[j].name + lastData.result.data[i].indicatorValues[j].period;
+                    let serieFound = series.find(o => o.name === serieName);
+                    if (typeof serieFound === "undefined") {
+                        series.push({
+                            "name" : serieName,
+                            "data" : [ ],
+                            "color" : colors[color],
+                            "website" : "",
+                            "description" : "middle"
+                        });
+                        color++;
+
+                        series.push({
+                            "name" : serieName,
+                            "data" : [ ],
+                            "color" : colors[color],
+                            "website" : "",
+                            "description" : "lower"
+                        });
+                        color++;
+
+                        series.push({
+                            "name" : serieName,
+                            "data" : [ ],
+                            "color" : colors[color],
+                            "website" : "",
+                            "description" : "upper"
+                        });
+                        color++;
+                    }
+                } else {
+                    let serieName = lastData.result.data[i].indicatorValues[j].name + lastData.result.data[i].indicatorValues[j].period;
+                    let serieFound = series.find(o => o.name === serieName);
+                    if (typeof serieFound === "undefined") {
+                        series.push({
+                            "name" : serieName,
+                            "data" : [ ],
+                            "color" : colors[color],
+                            "website" : "",
+                            "description" : serieName
+                        });
+                        color++;
+                    }
                 }
             }
         }
@@ -308,9 +342,26 @@ router.get('/analysis', async function (req, res, next) {
                 for (let s = 0; s < series.length; s++) {
                     // De les dades trobades ens quedem amb el primer indicador que pertanyi a la serie
                     for (let j = 0; j < dataFound.length; j++) {
-                        let indicatorFound = dataFound[j].indicatorValues.find(o => (o.name + o.period) === series[s].name);
-                        if (indicatorFound) {
-                            series[s].data[i] = indicatorFound.value;
+                        if (series[s].name.startsWith("BBANDS")) {
+                            let indicatorFound = dataFound[j].indicatorValues.find(o => (o.name + o.period) === series[s].name);
+                            if (indicatorFound) {
+                                switch(series[s].description) {
+                                    case "middle":
+                                        series[s].data[i] = indicatorFound.value.middle;
+                                        break;
+                                    case "lower":
+                                        series[s].data[i] = indicatorFound.value.lower;
+                                        break;
+                                    case "upper":
+                                        series[s].data[i] = indicatorFound.value.upper;
+                                        break;
+                                }
+                            }
+                        } else {
+                            let indicatorFound = dataFound[j].indicatorValues.find(o => (o.name + o.period) === series[s].name);
+                            if (indicatorFound) {
+                                series[s].data[i] = indicatorFound.value;
+                            }
                         }
                     }
                 }
