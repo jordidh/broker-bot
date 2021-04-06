@@ -58,22 +58,15 @@ exports.decide = function (market, lastData, currentData) {
         throw new Error("indicators incorrect, strategy bbands must have 2, with the same name and the period of the 2n must be grater than the first");
     }
 
-    let lastValuesLowerUpperDiff = lastData.indicatorValues[0].value.upper - lastData.indicatorValues[0].value.lower;
-    let currentValuesLowerUpperDiff = currentData.indicatorValues[0].value.upper - currentData.indicatorValues[0].value.lower;
+    // Vendrem quan el preu de tancament de la espelma anterior sigui superior a la línia upper de la bbands
+    let isClosePriceOverUpper = lastData.indicatorValues[0].value.upper < lastData.price;
+    // Comprarem quan el preu de tancament de l'espelma anterior sigui inferior a la línia lower de la bbands
+    let isClosePriceUnderLower = lastData.indicatorValues[0].value.lower > lastData.price;
 
-    let lowerUpperDiff = currentValuesLowerUpperDiff - lastValuesLowerUpperDiff;
-    let middleDiff = currentData.indicatorValues[0].value.middle - lastData.indicatorValues[0].value.middle;
-
-    if (middleDiff > 0) {
-        // Si la gràfica de middle puja i la diferència entre upper i lower augmenta => comprem
-        if (lowerUpperDiff > 0) {
-            action = "buy";
-        }
-    } else {
-        // Si la gràfica de middle baixa i la diferència entre upper i lower disminueix => venem
-        if (lowerUpperDiff < 0) {
-            action = "sell";
-        }
+    if (isClosePriceOverUpper === true) {
+        action = "sell";
+    } else if (isClosePriceUnderLower === true) {
+        action = "buy";
     }
 
     return action;
