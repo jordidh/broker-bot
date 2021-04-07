@@ -655,14 +655,33 @@ router.post('/prices', async function (req, res, next) {
         let seriesToSaveString = JSON.stringify(seriesToSave);
 
         let filename = req.body.filename;
-        if (!filename.endsWith(".json")) {
-            filename += ".json";
+        let fileextension = ".json";
+
+        // Si té extensió la separem del nom
+        if (filename.lastIndexOf(".") > 0) {
+            fileextension = filename.substring(filename.lastIndexOf("."));
+            filename = filename.substring(0, filename.lastIndexOf("."));
         }
 
-        const rawPrices = await fs.writeFile(TEST_DATA_PATH + "/" + filename, seriesToSaveString, "ascii");
+        // Si ja existeix un fitxer amb el mateix nom, renombrem el nou
+        let fileExists = true;
+        let i = 0;
+        while(fileExists) {
+            await fs.access(TEST_DATA_PATH + "/" + filename + (i > 0 ? i.toString() : "") + fileextension)
+            .then( function(fe) {
+                i++;
+            })
+            .catch( function(ex) {
+                filename = filename + i;
+                fileExists = false;
+            });
+        }
+
+        // Guardem el fitxer
+        await fs.writeFile(TEST_DATA_PATH + "/" + filename + fileextension, seriesToSaveString, "ascii");
 
         res.render('prices', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, 
-            m_success: "Data saved to test file successfully. Points saved = " + numDataSaved, data : dataToShow
+            m_success: "Data saved to file \"" + filename + fileextension + "\" successfully. Points saved = " + numDataSaved, data : dataToShow
         });
     } catch (e) {
         logger.error(e);
