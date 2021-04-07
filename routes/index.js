@@ -635,9 +635,12 @@ router.post('/prices', async function (req, res, next) {
         // Guardem les dades, entre el rang definit en un fitxer per poder testejar diferents estrategies
 
         // Convert to 2011-10-05T14:48:00.000Z
-        let startDate = new Date(req.body.startDate + "T" + req.body.startTime + ":00.000Z");
+        let startStringDate = req.body.startDate + "T" + req.body.startTime + ":00.000Z";
+        let startDate = new Date(startStringDate);
         let startDateEpoch = startDate.getTime();
-        let endDate = new Date(req.body.endDate + "T" + req.body.endTime + ":00.000Z");
+
+        let endStringDate = req.body.endDate + "T" + req.body.endTime + ":00.000Z";
+        let endDate = new Date(endStringDate);
         let endDateEpoch = endDate.getTime();
 
         let series = JSON.parse(req.body.series);
