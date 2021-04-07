@@ -652,7 +652,7 @@ router.post('/prices', async function (req, res, next) {
                 numDataSaved++;
             }
         }
-        let seriesToSaveString = JSON.stringify(series);
+        let seriesToSaveString = JSON.stringify(seriesToSave);
 
         let filename = req.body.filename;
         if (!filename.endsWith(".json")) {
