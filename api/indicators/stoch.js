@@ -46,11 +46,25 @@ class Stoch {
 
     // Guarda values en format { "high" : H, "low" : L, "close" : C }
     update(value) {
-        if (!value.hasOwnProperty("high") || !value.hasOwnProperty("low") || !value.hasOwnProperty("close")) {
-            throw Error("Value format must be { \"high\" : H, \"low\" : L, \"close\" : C }");
-        }
 
-        this.values.push(value);
+        if (typeof value === "object") {
+
+            if (Array.isArray(value)) {
+                // Suposem high, low, close
+                this.values.push({
+                    "high" : value[0],
+                    "low" : value[1],
+                    "close" : value[2]
+                });
+            } else {
+                if (!value.hasOwnProperty("high") || !value.hasOwnProperty("low") || !value.hasOwnProperty("close")) {
+                    throw Error("Value format must be { \"high\" : H, \"low\" : L, \"close\" : C }");
+                }
+                this.values.push(value);
+            }
+        } else {
+            throw Error("Value must be an object or an array");
+        }
 
         if (this.values.length > this.period) {
             let shifted = this.values.shift();

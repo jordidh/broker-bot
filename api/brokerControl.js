@@ -4,6 +4,7 @@ const {SMA, EMA} = require('trading-signals');
 const Big = require('big.js');
 const tradingSignals = require('trading-signals');
 const { BollingerBands } = require('trading-signals');
+const Stoch = require('./indicators/stoch.js');
 const axios = require('axios');
 const https = require('https');
 
@@ -160,6 +161,12 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
                 }
                 currentIndicator = new tradingSignals.SMMA(period);
                 break;
+            case "STOCH": //
+                if (isNaN(parseInt(period)) || parseInt(period) != period) {
+                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                }
+                currentIndicator = new Stoch(period);
+                break;
             default:
                 return { "error" : [ "Indicador " + indicator + " no implementat" ], "result" : { } }
         }
@@ -168,6 +175,7 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
 
             switch(indicator) {
                 case "ADX":
+                case "STOCH":
                     // Hem d'actualitzar amb diversos preus: {"high": 30.1983, "low": 29.4072, "close": 29.872}
                     currentIndicator.update({
                         "high" : price[priceIndex - 2],
@@ -198,6 +206,13 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
                         result[index] = [prices[index][timeIndex], { middle : middle.toNumber(), upper : upper.toNumber(), lower : lower.toNumber()} ];
                     } else {
                         result[index] = [prices[index][timeIndex], { middle : 0, upper : 0, lower : 0} ];
+                    }
+                    break;
+                case "STOCH":
+                    if (index >= period - 1 && currentIndicator.isStable) {
+                        result[index] = [prices[index][timeIndex], currentIndicator.getResult()];
+                    } else {
+                        result[index] = [prices[index][timeIndex], 0];
                     }
                     break;
                 default:
