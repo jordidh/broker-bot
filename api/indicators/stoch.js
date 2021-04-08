@@ -20,6 +20,9 @@
  * H14 = The highest price traded during the same 14-day period
  * %K = The current value of the stochastic indicator
  * 
+ * The formula for the smothed Stochastic Oscillator Is
+ * k = SMA(STOCH, 3) => (k + k-1 + k-2) / 3
+ * 
  * Example, if the 14-day high is $150, the low is $125 and the current close 
  * is $145, then the reading for the current session would be: 
  * (145-125) / (150 - 125) * 100 = 80%.
@@ -38,10 +41,12 @@ class Stoch {
     isStable = false;
     period = 14;
     values = [];    // guarda values en format { "high" : H, "low" : L, "close" : C }
+    kvalues = [];   // guarda el resultat de la k, per poder calcular fàcilment l'smothed k
 
     constructor(period) {
         this.period = period;
         this.values = [];
+        this.kvalues = [];
     }
 
     // Guarda values en format { "high" : H, "low" : L, "close" : C }
@@ -66,14 +71,17 @@ class Stoch {
             throw Error("Value must be an object or an array");
         }
 
-        if (this.values.length > this.period) {
+        this.kvalues.push(this.calculatekflexible(this.period));
+
+        // Ens guardem 3 mes per poder calcular l'SMA de stock, stoch-1 i stoch-2
+        if (this.values.length > (this.period + 3)) {
             let shifted = this.values.shift();
+            let shiftedk = this.kvalues.shift();
             //console.log("shifted=", shifted);
-        } else {
-            this.isStable = false;
         }
 
-        this.isStable = (this.values.length >= this.period);
+        this.isStable = (this.values.length >= (this.period + 3));
+        //this.isStable = (this.values.length > this.period);
     }
 
     getResult() {
@@ -82,14 +90,29 @@ class Stoch {
             return 0;
         }
 
-        let higgest = this.values[0].high;
-        let lowest = this.values[0].low;
-        let close = this.values[this.values.length - 1].close;
+        let k = this.calculateK(this.values.length - this.period, this.values.length);
+        let k1 = this.calculateK(this.values.length - this.period - 1, this.values.length - 1);
+        let k2 = this.calculateK(this.values.length - this.period - 2, this.values.length - 2);
 
-        //console.log(this.values);
+        return parseFloat(((k + k1 + k2) / 3).toFixed(2));
+        
+        //return (this.kvalues[0] + this.kvalues[1] + this.kvalues[2]) / 3;
+    }
 
+    calculatekflexible(period) {
+        let startIndex = (this.values.length > period ? this.values.length - period : 0);
+        let endIndex = this.values.length - 1;
+
+        if (endIndex <= 1) {
+            return 0;
+        }
+
+        let higgest = this.values[startIndex].high;
+        let lowest = this.values[startIndex].low;
+        let close = this.values[endIndex - 1].close;
+    
         // Busquem el preu mes alt i el mes baix
-        for (let i = 1; i < this.values.length; i++) {
+        for (let i = (startIndex + 1); i < endIndex; i++) {
             if (higgest < this.values[i].high) {
                 higgest = this.values[i].high;
             }
@@ -97,12 +120,30 @@ class Stoch {
                 lowest = this.values[i].low;
             }
         }
-
+    
         // Calculem: %K=( ( C - L14 ) / (H14 - L14) ) x 100
         //console.log("close=" + close + ", high=" + higgest + ", low=" + lowest);
-        let k = (close - lowest) / (higgest - lowest) * 100;
+        return ((close - lowest) / (higgest - lowest)) * 100;
+    }
 
-        return k;
+    calculateK(startIndex, endIndex) {
+        let higgest = this.values[startIndex].high;
+        let lowest = this.values[startIndex].low;
+        let close = this.values[endIndex - 1].close;
+    
+        // Busquem el preu mes alt i el mes baix
+        for (let i = (startIndex + 1); i < endIndex; i++) {
+            if (higgest < this.values[i].high) {
+                higgest = this.values[i].high;
+            }
+            if (lowest > this.values[i].low) {
+                lowest = this.values[i].low;
+            }
+        }
+    
+        // Calculem: %K=( ( C - L14 ) / (H14 - L14) ) x 100
+        //console.log("close=" + close + ", high=" + higgest + ", low=" + lowest);
+        return ((close - lowest) / (higgest - lowest)) * 100;
     }
 }
 

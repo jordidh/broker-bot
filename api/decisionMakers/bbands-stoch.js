@@ -59,14 +59,19 @@ exports.decide = function (market, lastData, currentData) {
         throw new Error("indicators incorrect, strategy bbands-stoch must have 2 indicators, BBANDS and STOCH");
     }
 
+    // Mirem les bbands
     // Vendrem quan el preu de tancament de la espelma anterior sigui superior a la línia upper de la bbands
     let isClosePriceOverUpper = lastData.indicatorValues[0].value.upper < lastData.price;
     // Comprarem quan el preu de tancament de l'espelma anterior sigui inferior a la línia lower de la bbands
     let isClosePriceUnderLower = lastData.indicatorValues[0].value.lower > lastData.price;
 
-    if (isClosePriceOverUpper === true) {
+    // Mirem el stoch
+    let stochOver80 = lastData.indicatorValues[1].value >= 80;
+    let stochUnder20 = lastData.indicatorValues[1].value <= 20;
+
+    if (isClosePriceOverUpper === true && stochOver80 === true) {
         action = "sell";
-    } else if (isClosePriceUnderLower === true) {
+    } else if (isClosePriceUnderLower === true && stochUnder20 === true) {
         action = "buy";
     }
 

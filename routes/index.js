@@ -269,7 +269,7 @@ router.get('/analysis', async function (req, res, next) {
 
         // Passada 1: posem els timestamps i creem les sèries
         for (let i = 0; i < lastData.result.data.length; i++) {
-            let currentTime = (new Date(lastData.result.data[i].windowEnd * 1000)).toISOString();
+            let currentTime = (new Date(lastData.result.data[i].windowEnd)).toISOString();
             let timeFound = timestamps.find(o => o === currentTime);
             if (typeof timeFound === "undefined") {
                 timestamps.push(currentTime);
