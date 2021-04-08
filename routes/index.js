@@ -21,6 +21,7 @@ const decisionMakerDemax2 = require('../api/decisionMakers/demax2');
 const decisionMakerEmax2AdxMacd = require('../api/decisionMakers/emax2-adx-macd');
 const decisionMakerBBands = require('../api/decisionMakers/bbands');
 const decisionMakerMacd = require('../api/decisionMakers/macd');
+const decisionMakerBBandsStoch = require('../api/decisionMakers/bbands-stoch');
 const { ExceptionHandler } = require('winston');
 
 const colors = ['#2f7ed8', '#0d233a', '#8bbc21', '#910000', '#1aadce',
@@ -191,6 +192,9 @@ router.get('/analysis', async function (req, res, next) {
                     break;
                 case "bbands":
                     decisionMaker = decisionMakerBBands;
+                    break;
+                case "bbands-stoch":
+                    decisionMaker = decisionMakerBBandsStoch;
                     break;
                 case "macd":
                     decisionMaker = decisionMakerMacd;

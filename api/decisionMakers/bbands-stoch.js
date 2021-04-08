@@ -43,7 +43,7 @@ exports.decide = function (market, lastData, currentData) {
     let action = "relax";
 
     // Validem que l'estrategia de decisió correspon amb el decisionMarker
-    if (market.strategy != "bbands") {
+    if (market.strategy != "bbands-stoch") {
         throw new Error("strategy \"" + market.strategy + "\" incorrect and does not match with the decisionMarker provided");
     }
 
@@ -52,10 +52,11 @@ exports.decide = function (market, lastData, currentData) {
     // Si DEMA(20) passa de sota a sobre de DEMA(10) venem, si passa de sobre a sota comprem.
 
     // Validem que siguin 2 índex, tots dos iguals i un amb un intervalmes gran que l'altre
-    if (market.indicator.length != 1 || 
-        market.indicator[0].name != "BBANDS") {
+    if (market.indicator.length != 2 || 
+        market.indicator[0].name != "BBANDS" ||
+        market.indicator[1].name != "STOCH") {
 
-        throw new Error("indicators incorrect, strategy bbands must have 1 indicator");
+        throw new Error("indicators incorrect, strategy bbands-stoch must have 2 indicators, BBANDS and STOCH");
     }
 
     // Vendrem quan el preu de tancament de la espelma anterior sigui superior a la línia upper de la bbands
