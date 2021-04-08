@@ -178,7 +178,7 @@ router.get('/analysis', async function (req, res, next) {
 
             // Apliquem l'estratègia a sobre dels preus
             let funds = 1000;
-            let comission = [2, 2];
+            let comission = [0.2, 0.2];
 
             // triem el decision maker
             let decisionMaker = null;

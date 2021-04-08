@@ -49,39 +49,6 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
             return { "error" : [ "error, prices array length must be greater than the period" ], "result" : { } }
         }
 
-
-        /*
-        let adxi = new tradingSignals.ADX(14);
-        adxi.update({"high": 30.1983, "low": 29.4072, "close": 29.872});
-        adxi.update({"high": 31.1983, "low": 28.4072, "close": 29.872});
-        adxi.update({"high": 32.1983, "low": 27.4072, "close": 28.872});
-        adxi.update({"high": 31.1983, "low": 25.4072, "close": 27.872});
-        adxi.update({"high": 32.1983, "low": 23.4072, "close": 28.872});
-        adxi.update({"high": 33.1983, "low": 22.4072, "close": 29.872});
-        adxi.update({"high": 35.1983, "low": 24.4072, "close": 28.872});
-        adxi.update({"high": 34.1983, "low": 23.4072, "close": 27.872});
-        adxi.update({"high": 35.1983, "low": 25.4072, "close": 28.872});
-        adxi.update({"high": 36.1983, "low": 26.4072, "close": 28.872});
-        adxi.update({"high": 37.1983, "low": 24.4072, "close": 29.872});
-        adxi.update({"high": 33.1983, "low": 22.4072, "close": 28.872});
-        adxi.update({"high": 34.1983, "low": 21.4072, "close": 29.872});
-        adxi.update({"high": 36.1983, "low": 20.4072, "close": 27.872});
-        adxi.update({"high": 38.1983, "low": 22.4072, "close": 26.872});
-        adxi.update({"high": 36.1983, "low": 21.4072, "close": 28.872});
-        adxi.update({"high": 34.1983, "low": 24.4072, "close": 29.872});
-        adxi.update({"high": 33.1983, "low": 25.4072, "close": 28.872});
-        adxi.update({"high": 32.1983, "low": 22.4072, "close": 28.872});
-        adxi.update({"high": 33.1983, "low": 21.4072, "close": 29.872});
-        adxi.update({"high": 34.1983, "low": 20.4072, "close": 27.872});
-        adxi.update({"high": 35.1983, "low": 22.4072, "close": 28.872});
-        adxi.update({"high": 37.1983, "low": 23.4072, "close": 29.872});
-        adxi.update({"high": 30.1983, "low": 23.4072, "close": 29.872});
-
-        let val = adxi.getResult().toNumber();
-        */
-
-
-
         let result = new Array(prices.length);
 
         let currentIndicator = null;
@@ -638,23 +605,32 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                     result.fundsEnd = 0;
                     break;
                 case "sell":
-                    // Apliquem comissió de venda i calculem el resultat iel posem a funds
-                    let sellPrice = (lastData.volume ? lastData.volume : 0) * decision.result.currentData.price;
-                    let sellComission = (sellPrice * comission[1] / 100);
-                    // Treiem la comissió
-                    result.fundsEnd = sellPrice - sellComission;
-                    // Sumem la comissió actual a les totals
-                    result.comission += sellComission;
-                    // Sumem el benefici al total
-                    //result.profit += (result.fundsEnd - (lastData.buyPrice ? lastData.buyPrice : 0));
-                    result.profit += (result.fundsEnd - result.fundsBegin);
+                    // Si volume és 0 es que no hi ha res per vendre => no fem la venda
+                    if (lastData.volume != 0) {
+                        // Apliquem comissió de venda i calculem el resultat i el posem a funds
+                        let sellPrice = (lastData.volume ? lastData.volume : 0) * decision.result.currentData.price;
+                        let sellComission = (sellPrice * comission[1] / 100);
+                        // Treiem la comissió
+                        result.fundsEnd = sellPrice - sellComission;
+                        // Sumem la comissió actual a les totals
+                        result.comission += sellComission;
+                        // Sumem el benefici al total
+                        //result.profit += (result.fundsEnd - (lastData.buyPrice ? lastData.buyPrice : 0));
+                        result.profit += (result.fundsEnd - result.fundsBegin);
 
-                    // Ja no temim currency per tant el volum és 0 i el preu de l'última compra també
-                    decision.result.currentData.volume = 0;
-                    decision.result.currentData.buyPrice = 0;
+                        // Ja no temim currency per tant el volum és 0 i el preu de l'última compra també
+                        decision.result.currentData.volume = 0;
+                        decision.result.currentData.buyPrice = 0;
 
-                    //console.log(result);
-
+                        //console.log(result);
+                    } else {
+                        // El volum es manté constant
+                        decision.result.currentData.volume = (lastData.volume ? lastData.volume : 0);
+                        // Passem el preu de l'última compra
+                        decision.result.currentData.buyPrice = (lastData.buyPrice ? lastData.buyPrice : 0);
+                        // Marquem que no es ven
+                        decision.result.currentData.decision = "relax";
+                    }
                     break;
             }
 
