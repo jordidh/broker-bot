@@ -40,11 +40,17 @@
 class Stoch {
     isStable = false;
     period = 14;
+    smoth = 3;
     values = [];    // guarda values en format { "high" : H, "low" : L, "close" : C }
     kvalues = [];   // guarda el resultat de la k, per poder calcular fàcilment l'smothed k
 
-    constructor(period) {
+    constructor(period, smoth) {
+
+        if (smoth === 0) {
+            throw Error("Smoth must be 1 or higger");
+        }
         this.period = period;
+        this.smoth = smoth;
         this.values = [];
         this.kvalues = [];
     }
@@ -74,14 +80,15 @@ class Stoch {
         this.kvalues.push(this.calculatekflexible(this.period));
 
         // Ens guardem 3 mes per poder calcular l'SMA de stock, stoch-1 i stoch-2
-        if (this.values.length > (this.period + 3)) {
+        if (this.values.length > (this.period + this.smoth)) {
             let shifted = this.values.shift();
             let shiftedk = this.kvalues.shift();
-            //console.log("shifted=", shifted);
         }
 
-        this.isStable = (this.values.length >= (this.period + 3));
-        //this.isStable = (this.values.length > this.period);
+        // Per començar a tenir dades estables necessitem tenir com a dades anteriors el període + smoth 
+        // per poder obtenir k amb un nombre anterior a dades = període i un nombre de k anteriors igual
+        // a l'smoth 
+        this.isStable = (this.values.length >= (this.period + this.smoth - 1));
     }
 
     getResult() {
@@ -90,12 +97,18 @@ class Stoch {
             return 0;
         }
 
-        let k = this.calculateK(this.values.length - this.period, this.values.length);
-        let k1 = this.calculateK(this.values.length - this.period - 1, this.values.length - 1);
-        let k2 = this.calculateK(this.values.length - this.period - 2, this.values.length - 2);
+        let kTotal = 0;
+        for (let i = 0; i < this.smoth; i ++) {
+            kTotal += this.calculateK(this.values.length - this.period - i, this.values.length - i);
+        }
 
-        return parseFloat(((k + k1 + k2) / 3).toFixed(2));
-        
+        // Retornem amb 2 decimals per simplificar, de fet és un tant per cent
+        return parseFloat( (kTotal / this.smoth).toFixed(2) );
+
+        //let k = this.calculateK(this.values.length - this.period, this.values.length);
+        //let k1 = this.calculateK(this.values.length - this.period - 1, this.values.length - 1);
+        //let k2 = this.calculateK(this.values.length - this.period - 2, this.values.length - 2);
+        //return parseFloat(((k + k1 + k2) / 3).toFixed(2));
         //return (this.kvalues[0] + this.kvalues[1] + this.kvalues[2]) / 3;
     }
 

@@ -162,10 +162,11 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
                 currentIndicator = new tradingSignals.SMMA(period);
                 break;
             case "STOCH": //
-                if (isNaN(parseInt(period)) || parseInt(period) != period) {
-                    return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
+                if (period.hasOwnProperty('period') === false || 
+                    period.hasOwnProperty('smoth') === false) {
+                    return { "error" : [ "error in parameter period, must be an object with properties period and smoth" ], "result" : { } }
                 }
-                currentIndicator = new Stoch(period);
+                currentIndicator = new Stoch(period.period, period.smoth);
                 break;
             default:
                 return { "error" : [ "Indicador " + indicator + " no implementat" ], "result" : { } }
@@ -209,7 +210,8 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
                     }
                     break;
                 case "STOCH":
-                    if (index >= period - 1 && currentIndicator.isStable) {
+                    //if (index >= (period.period - 1 + period.smoth -1) && currentIndicator.isStable) {
+                    if (currentIndicator.isStable) {
                         result[index] = [prices[index][timeIndex], currentIndicator.getResult()];
                     } else {
                         result[index] = [prices[index][timeIndex], 0];

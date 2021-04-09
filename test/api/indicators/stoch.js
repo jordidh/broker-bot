@@ -13,9 +13,9 @@ const Stoch = require('../../../api/indicators/stoch.js');
 
 
 describe('Stoch indicator', () =>  {
-    /*
-    it('calculates K successfully with values as array of objects', async () => {
+    it('calculates K successfully with period:14, smoth:1 and values as array of objects', async () => {
         const period = 14;
+        const smoth = 1;
 
         const prices = [
             {"high":168, "low":161, "close":165},
@@ -40,10 +40,9 @@ describe('Stoch indicator', () =>  {
             {"high":180, "low":178, "close":180}
         ];
 
-        var resultExpected = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62.5, 
-            58.06451612903226, 25.806451612903224, 20.689655172413794, 48.275862068965516, 51.724137931034484, 55.172413793103445 ];
+        var resultExpected = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62.5, 58.06, 25.81, 20.69, 48.28, 51.72, 55.17 ];
 
-        let indicator = new Stoch(period);
+        let indicator = new Stoch(period, smoth);
         let result = [];
         for (let i = 0; i < prices.length; i++) {
             indicator.update(prices[i]);
@@ -62,8 +61,9 @@ describe('Stoch indicator', () =>  {
         expect(result).to.deep.equal(resultExpected);
     });
 
-    it('calculates K successfully with values as array of arrays', async () => {
+    it('calculates K successfully with period:14, smoth:1 and values as array of arrays', async () => {
         const period = 14;
+        const smoth = 1;
 
         const prices = [
             [168, 161, 165],
@@ -88,10 +88,9 @@ describe('Stoch indicator', () =>  {
             [180, 178, 180]
         ];
 
-        var resultExpected = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62.5, 
-            58.06451612903226, 25.806451612903224, 20.689655172413794, 48.275862068965516, 51.724137931034484, 55.172413793103445 ];
+        var resultExpected = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62.5, 58.06, 25.81, 20.69, 48.28, 51.72, 55.17 ];
 
-        let indicator = new Stoch(period);
+        let indicator = new Stoch(period, smoth);
         let result = [];
         for (let i = 0; i < prices.length; i++) {
             indicator.update(prices[i]);
@@ -109,7 +108,6 @@ describe('Stoch indicator', () =>  {
 
         expect(result).to.deep.equal(resultExpected);
     });
-    */
 
     /*
     // Data from: XBTEUR, 7/4/2021 20:00
@@ -139,8 +137,9 @@ describe('Stoch indicator', () =>  {
     48832.0, 48490.9, 48689.6, 83.86
     48752.7, 48487.2, 48543.7, 82.56
     */
-    it('calculates K successfully with values as array of arrays with tradingview real data', async () => {
+    it('calculates K successfully with period:14, smoth:3 and values as array of arrays with tradingview real data', async () => {
         const period = 14;
+        const smoth = 3;
 
         const prices = [
             // XBTEUR, 7/4/2021 20:00
@@ -170,16 +169,14 @@ describe('Stoch indicator', () =>  {
             [48752.7, 48487.2, 48543.7], 
         ];
 
-        var resultExpected = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 68.54, 74.32, 89.90, 88.47, 87.33, 84.42, 83.86, 82.56];
+        var resultExpected = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56.98, 68.54, 74.32, 89.90, 88.47, 87.33, 84.42, 83.86, 82.56];
 
-        let indicator = new Stoch(period);
+        let indicator = new Stoch(period, smoth);
         let result = [];
         for (let i = 0; i < prices.length; i++) {
             indicator.update(prices[i]);
 
-            //console.log("s.isStable=" + indicator.isStable);
-
-            if (i < (period - 1 + 3)) {
+            if (i < (period - 1 + smoth - 1)) {
                 expect(indicator.isStable).to.equal(false);
             } else {
                 expect(indicator.isStable).to.equal(true);
