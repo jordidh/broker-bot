@@ -22,12 +22,6 @@ async function checkMarket(markets) {
     await Promise.all(markets.map(async (market) => {
         logger.info("Begin checking market " + market.id);
 
-        // TODO: recuperem l'última decisió presa
-        let lastDecision = { 
-            action: lastDecision, 
-            price: 0 
-        }
-
         // Comprovem que la funció indicada en la configuració existeix i és una funció
         // Important: aquesta funció ha d'estar a dins de api/brokerControl.js
         //var fn = market.strategy.toString().trim();
@@ -39,6 +33,12 @@ async function checkMarket(markets) {
 
         // Recuperem o creem una instància del bot
         let botData = new BotPersistentData().getInstance();
+
+
+        // Recuperem l'última decisió presa
+        // Si no hi ha dades pel mercat es retorna { id:0, market: market.id, decision:"", price: 0 }
+        let lastDecision = await botData.getLastMarketDecision(market.id);
+
         // Recuperem últimes dades emmagatzemades per aquest mercat
         // Retorna una cosa del tipus: {
         //   market : "id",
@@ -125,6 +125,11 @@ async function checkMarket(markets) {
             //    // Fem post
             //    let postResult = await brokerControl.postToTradingBot(bot, decision.result.currentData.decision);
             //});
+
+            // Guardem la decisió presa
+            lastDecision.price = decision.result.currentData.price;
+            lastDecision.decision = decision.result.currentData.decision;
+            await botData.saveLastMarketDecision(lastDecision);
 
             // Fem un post en paralel
             await Promise.all(market.tradingBots.map(async (bot) => {

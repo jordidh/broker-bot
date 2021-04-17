@@ -19,14 +19,23 @@ class BotPersistentData {
 
     CheckDatabaseTables = async function() {
         try {
-            // Tabla logs
-            let sqlRes = await sqlite.run(`CREATE TABLE IF NOT EXISTS marketData (
+            // Tunla logs
+            await sqlite.run(`CREATE TABLE IF NOT EXISTS marketData (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 market TEXT NOT NULL,
                 price REAL NOT NULL,
                 windowStart REAL NOT NULL,
                 windowEnd REAL NOT NULL,
                 indicatorValues TEXT NOT NULL,
+                decision TEXT NOT NULL
+            )`);
+
+            // Taula logs
+            await sqlite.run(`CREATE TABLE IF NOT EXISTS marketLastDecision (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                market TEXT NOT NULL,
+                price REAL NOT NULL,
+                timestamp REAL NOT NULL,
                 decision TEXT NOT NULL
             )`);
 
@@ -214,7 +223,7 @@ class BotPersistentData {
 
 
     /**
-     * Funció que recupera els diferents mercats emmagatzemats
+     * Funció que recupera els diferents mercats emmagatzemats a la tula de logs
      */
     getMarkets = async function() {
         try {
@@ -230,6 +239,79 @@ class BotPersistentData {
                     "error" : [],
                     "result" : []
                 }
+            }
+        } catch (err) {
+            console.error(err);
+            return {
+                "error" : [ err ],
+                "result" : []
+            }
+        }
+    }
+
+    /**
+     * Funció que retorna l'última decisió presa d'un mercat
+     * Sinó existeix retorna result = { id:0, market: market.id, decision:"", price: 0 }
+     * @param {*} marketId 
+     */
+    getLastMarketDecision = async function(marketId) {
+        try {
+            let data = {};
+
+            data = await sqlite.all(`SELECT * FROM marketLastDecision WHERE market = '` + marketId + `' LIMIT 1`);
+            if (data && data != null && Array.isArray(data) && data.length > 0){
+                return {
+                    "error" : [],
+                    "result" : data[0]
+                }
+            } else {
+                return {
+                    "error" : [],
+                    "result" : {
+                        id: 0,
+                        market: marketId,
+                        decision: "",
+                        price: 0
+                    }
+                }
+            }
+        } catch (err) {
+            return {
+                "error" : [ err ],
+                "result" : []
+            }
+        }
+    }
+
+    /**
+     * Funció que guarda l'última decisió
+     * Si l'objecte que es proporciona no té id o aquest és null o 0 es fa un insert, sinó un replace
+     * @param {*} data 
+     */
+    saveLastMarketDecision = async function(data) {
+        try {
+            let sql = "";
+            if (data.id && data.id != null && data.id > 0) {
+                sql = `INSERT INTO marketLastDecision (id, market, price, timestamp, decision) 
+                       VALUES (` +
+                           data.id + `,` +
+                           `'` + data.market + `',` + 
+                           data.price + `,'` + 
+                           data.timestamp + `,'` + 
+                           data.decision + `')`;
+            } else {
+                sql = `REPLACE INTO marketLastDecision (market, price, timestamp, decision) 
+                       VALUES ('` + data.market + `',` + 
+                            data.price + `,'` + 
+                            (new Date()).getTime() + `,'` + 
+                            data.decision + `')`;
+            }            
+
+            let result = await sqlite.run(sql);
+
+            return {
+                "error" : [ ],
+                "result" : result
             }
         } catch (err) {
             console.error(err);
