@@ -292,20 +292,41 @@ class BotPersistentData {
         try {
             let sql = "";
             if (data.id && data.id != null && data.id > 0) {
-                sql = `INSERT INTO marketLastDecision (id, market, price, timestamp, decision) 
-                       VALUES (` +
-                           data.id + `,` +
-                           `'` + data.market + `',` + 
-                           data.price + `,'` + 
-                           data.timestamp + `,'` + 
-                           data.decision + `')`;
-            } else {
-                sql = `REPLACE INTO marketLastDecision (market, price, timestamp, decision) 
-                       VALUES ('` + data.market + `',` + 
-                            data.price + `,'` + 
+                sql = `REPLACE INTO marketLastDecision (id, market, price, timestamp, decision) 
+                       VALUES (` + data.id + `'` + 
+                            data.market + `',` + 
+                            data.price + `,` + 
                             (new Date()).getTime() + `,'` + 
                             data.decision + `')`;
-            }            
+            } else {
+                sql = `INSERT INTO marketLastDecision (market, price, timestamp, decision) 
+                       VALUES (` +
+                           `'` + data.market + `',` + 
+                           data.price + `,` + 
+                           (new Date()).getTime() + `,'` + 
+                           data.decision + `')`;
+            }
+
+            console.log(sql);
+
+            let result = await sqlite.run(sql);
+
+            return {
+                "error" : [ ],
+                "result" : result
+            }
+        } catch (err) {
+            console.error(err);
+            return {
+                "error" : [ err ],
+                "result" : []
+            }
+        }
+    }
+
+    deleteLastMarketDecision = async function(marketId) {
+        try {
+            let sql = `DELETE FROM marketLastDecision WHERE market = '` + marketId + `'`;
 
             let result = await sqlite.run(sql);
 

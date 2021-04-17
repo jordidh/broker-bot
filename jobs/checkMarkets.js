@@ -37,7 +37,12 @@ async function checkMarket(markets) {
 
         // Recuperem l'última decisió presa
         // Si no hi ha dades pel mercat es retorna { id:0, market: market.id, decision:"", price: 0 }
-        let lastDecision = await botData.getLastMarketDecision(market.id);
+        let lastDecisionResult = await botData.getLastMarketDecision(market.id);
+        if (lastDecisionResult.error != []) {
+            logger.error("checking markets, error accessing database to get last decision for market.id = " + market.id + ": " + lastDecisionResult.error[0]);
+            return;
+        }
+        let lastDecision = lastDecisionResult.result;
 
         // Recuperem últimes dades emmagatzemades per aquest mercat
         // Retorna una cosa del tipus: {

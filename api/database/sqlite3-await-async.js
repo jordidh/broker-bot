@@ -21,7 +21,7 @@ exports.run = function (query) {
         db.run(query,
             function (err) {
                 if (err) reject(err.message)
-                else resolve(true)
+                else resolve(this.lastID)   // retornem l'id (l'últim afegit, o l'eliminat, etc...)
             });
     });
 }
