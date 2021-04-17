@@ -41,8 +41,13 @@
  *     { "name" : "DEMA", "period" : 50, "value" : 34 }
  *   ]
  * }
+ * @param {*} lastAction:
+ * {
+ *      action: "", // última acció: "" quan és el primer cop o després d'un reinici / buy / sell / relax
+ *      price: 0,   // preu de compra o venda de l'últinma acció
+ * }
  */
-exports.decide = function (market, lastData, currentData) {
+exports.decide = function (market, lastData, currentData, lastAction) {
     let action = "relax";
 
     // Validem que l'estrategia de decisió correspon amb el decisionMarker

@@ -22,6 +22,12 @@ async function checkMarket(markets) {
     await Promise.all(markets.map(async (market) => {
         logger.info("Begin checking market " + market.id);
 
+        // TODO: recuperem l'última decisió presa
+        let lastDecision = { 
+            action: lastDecision, 
+            price: 0 
+        }
+
         // Comprovem que la funció indicada en la configuració existeix i és una funció
         // Important: aquesta funció ha d'estar a dins de api/brokerControl.js
         //var fn = market.strategy.toString().trim();
@@ -97,7 +103,13 @@ async function checkMarket(markets) {
         //   }
         // }
         //let decision = brokerControl[fn](market, lastData);
-        let decision = await brokerControl.checkAndDecide(market, lastData.result, prices.result, decisionMaker);
+        //
+        // lastDecision:
+        // {
+        //      action: "", // última acció: "" quan és el primer cop o després d'un reinici / buy / sell / relax
+        //      price: 0,   // preu de compra o venda de l'últinma acció
+        // }
+        let decision = await brokerControl.checkAndDecide(market, lastData.result, lastDecision, prices.result, decisionMaker);
         logger.info("Decisions result = " + JSON.stringify(decision));
 
         // Emmagatzemem les dades obtingudes

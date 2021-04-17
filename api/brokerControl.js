@@ -103,6 +103,9 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
                 currentIndicator = new tradingSignals.ATR(period);
                 break;
             case "BBANDS": //Bollinger Bands (BBANDS)
+                // Many traders believe the closer the prices move to the upper band, the more overbought the market, 
+                // and the closer the prices move to the lower band, the more oversold the market. 
+                // John Bollinger has a set of 22 rules to follow when using the bands as a trading system.
                 if (isNaN(parseInt(period)) || parseInt(period) != period) {
                     return { "error" : [ "error in parameter period, must be an integer" ], "result" : { } }
                 }
@@ -265,6 +268,11 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
  *         }
  *     ]
  * }
+ * @param {*} lastAction
+ * {
+ *      action: "", // última acció: "" quan és el primer cop o després d'un reinici / buy / sell / relax
+ *      price: 0,   // preu de compra o venda de l'últinma acció
+ * }
  * @param {*} lastData : ultimes dades guardades a la BD, ens han de permetre decidir 
  *                       que fer segons les dates que es calcuin amb les dades actuals
  * lastData = {
@@ -302,7 +310,7 @@ exports.applyIndicator = async function(prices, indicator, period, timeIndex, pr
  *    }
  * }
  */
-exports.checkAndDecide = async function(market, lastData, prices, decisionMaker) {
+exports.checkAndDecide = async function(market, lastData, lastAction, prices, decisionMaker) {
     /*
     // Si lastData no té un valor correcte sortim
     if (typeof lastData === "undefined") {
@@ -351,7 +359,7 @@ exports.checkAndDecide = async function(market, lastData, prices, decisionMaker)
     // Si lastData té valor comparem per determinar quina acció prenem
     if (lastData && lastData.indicatorValues && Array.isArray(lastData.indicatorValues) && lastData.indicatorValues.length > 0) {
         try {
-            action = decisionMaker.decide(market, lastData, currentData);
+            action = decisionMaker.decide(market, lastData, currentData, lastAction);
         } catch(exDecisor) {
             return {
                 "error" : [ exDecisor.message ],
@@ -487,8 +495,8 @@ exports.postToTradingBot = async function(bot, action) {
  * @param {*} analysisId : identificador de l'anlàsisi dins del conjunt 
  *                   d'anàlisis que es realitzaran
  * @param {*} funds : quantitat de € que es fa servir per la compra inicial
- * @param {*} comission : [ 1%, 2% ] quantitat que es queda l'exchange per cada compra o venda
  * @param {*} market : {} objecte amb la definició del mercat, tal i com apareix al config
+ *                     Ha de tenir una propietat amb nom comission: [ 1%, 2% ] quantitat que es queda l'exchange per cada compra o venda
  * @param {*} prices : [] matriu amb els preus
  * Retorna un array de resultats del tipus:
  * {
@@ -516,7 +524,7 @@ exports.postToTradingBot = async function(bot, action) {
  *   }
  * }
  */
-exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker) {
+exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds, market, prices, decisionMaker) {
     try {
         // Busquem el període mes gran dels indicadors, aquest ens dirà a partir de quin
         // punt hem de començar a analitzar els prices (els DEMA necessiten X dades previes)
@@ -543,6 +551,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
         if (prices.length <= maxPeriod) {
             return {
                 "error" : [ "Error, the prices length must be greater than the max period"],
+                "log" : "",
                 "result" : null
             }
         }
@@ -560,6 +569,8 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
         // Inicialitzem el valor de lastData
         let lastData = { };
         let lastDecision = "";
+
+        let log = "";
 
         // Executem el checkAndDecide per cada price i guardem les dades resultants
         // per analitzarles posteriorment
@@ -579,7 +590,13 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
             //   }
             // }
             //let decision = brokerControl[fn](market, lastData);
-            let decision = await this.checkAndDecide(market, lastData, partialPrices, decisionMaker);
+            //
+            // lastDecision:
+            // {
+            //      action: "", // última acció: "" quan és el primer cop o després d'un reinici / buy / sell / relax
+            //      price: 0,   // preu de compra o venda de l'últinma acció
+            // }
+            let decision = await this.checkAndDecide(market, lastData, { action: lastDecision, price: 0 }, partialPrices, decisionMaker);
             if (decision.error.length > 0) {
                 console.error("Error in checkAndDecide " + decision.error[0]);
                 return decision;
@@ -592,6 +609,8 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                 if (decision.result.currentData.decision === lastDecision) {
                     // Si l'última decisió és igual que l'actual la posem com "relax"
                     decision.result.currentData.decision = "relax";
+
+                    log += decision.result.currentData.windowStart + " - Duplicate " + lastDecision + "\n";
                 } else {
                     lastDecision = decision.result.currentData.decision;
                 }
@@ -610,7 +629,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                     // El primer cop que comprem tindrem els € per comprar cripto a funds
                     // A partir de la primera venda els € resultants els tindrem a result
                     let buyPrice = (result.fundsEnd === 0 ? result.fundsBegin : result.fundsEnd);
-                    let buyComission = (buyPrice * comission[0] / 100);
+                    let buyComission = (buyPrice * market.comission[0] / 100);
                     let buyPriceWithOutCommission = buyPrice - buyComission;
                     // Sumem la comissió actual a les totals
                     result.comission += buyComission;
@@ -620,13 +639,15 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
 
                     // El posem a 0 ja que hem comprat crypto i ja no tenim €
                     result.fundsEnd = 0;
+
+                    log += decision.result.currentData.windowStart + " - " + decision.result.currentData.decision + "\n";
                     break;
                 case "sell":
                     // Si volume és 0 es que no hi ha res per vendre => no fem la venda
                     if (lastData.volume != 0) {
                         // Apliquem comissió de venda i calculem el resultat i el posem a funds
                         let sellPrice = (lastData.volume ? lastData.volume : 0) * decision.result.currentData.price;
-                        let sellComission = (sellPrice * comission[1] / 100);
+                        let sellComission = (sellPrice * market.comission[1] / 100);
                         // Treiem la comissió
                         result.fundsEnd = sellPrice - sellComission;
                         // Sumem la comissió actual a les totals
@@ -640,6 +661,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                         decision.result.currentData.buyPrice = 0;
 
                         //console.log(result);
+
                     } else {
                         // El volum es manté constant
                         decision.result.currentData.volume = (lastData.volume ? lastData.volume : 0);
@@ -648,6 +670,9 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                         // Marquem que no es ven
                         decision.result.currentData.decision = "relax";
                     }
+                    
+                    log += decision.result.currentData.windowStart + " - " + decision.result.currentData.decision + "\n";
+
                     break;
             }
 
@@ -661,11 +686,13 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
 
         return {
             "error" : [ ],
+            "log" : log,
             "result" : result
         }
     } catch (e) {
         return {
             "error" : [ "Exception analizing strategy " + e.message ],
+            "log" : "",
             "result" : e
         }
     }

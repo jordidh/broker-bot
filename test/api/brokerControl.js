@@ -426,12 +426,12 @@ describe('BrokerControl.analizeStrategy()', () => {
         const analysisBatchNumber = "Proves-0001";
         const analysisId = 1;
         const funds = 1000;   // €
-        const comission = [ 2, 4];  // comprar 2%, vendre 4%
         const market = {
             "id" : "BTC",
             "api" : "",  // pel test no es fa servir
             "strategy" : "",  // <----- no posem cap estratègia, ha de fallar
             "decisionWindow" : "",
+            comission: [ 2, 4],  // comprar 2%, vendre 4%
             "indicator" : [
                 { "name" : "DEMA", "period" : 10 },
                 { "name" : "DEMA", "period" : 20 }
@@ -468,7 +468,7 @@ describe('BrokerControl.analizeStrategy()', () => {
             "result" : { }
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, market, prices, decisionMaker);
 
         //console.log(result);
 
@@ -479,12 +479,12 @@ describe('BrokerControl.analizeStrategy()', () => {
         const analysisBatchNumber = "Proves-0001";
         const analysisId = 1;
         const funds = 1000;   // €
-        const comission = [ 2, 4];  // comprar 2%, vendre 4%
         const market = {
             "id" : "BTC",
             "api" : "",  // pel test no es fa servir
             "strategy" : "NOT_DEFINED",  // <----- posem una estratègia que no existeix, ha de fallar
             "decisionWindow" : "",
+            comission: [ 2, 4],  // comprar 2%, vendre 4%
             "indicator" : [
                 { "name" : "DEMA", "period" : 10 },
                 { "name" : "DEMA", "period" : 20 }
@@ -521,7 +521,7 @@ describe('BrokerControl.analizeStrategy()', () => {
             "result" : { }
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, market, prices, decisionMaker);
 
         //console.log(result);
 
@@ -532,12 +532,12 @@ describe('BrokerControl.analizeStrategy()', () => {
         const analysisBatchNumber = "Proves-0001";
         const analysisId = 1;
         const funds = 1000;   // €
-        const comission = [ 2, 4];  // comprar 2%, vendre 4%
         const market = {
             "id" : "BTC",
             "api" : "",  // pel test no es fa servir
             "strategy" : "demax2",  // <----- posem una estratègia que necessita 2 indicadors DEMA
             "decisionWindow" : "",
+            comission: [ 2, 4],  // comprar 2%, vendre 4%
             "indicator" : [
                 { "name" : "DEMA", "period" : 20 },   //  <----- posem indicadors a l'inrevés, ha de donar error
                 { "name" : "DEMA", "period" : 10 }
@@ -574,7 +574,7 @@ describe('BrokerControl.analizeStrategy()', () => {
             "result" : { }
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, market, prices, decisionMaker);
 
         //console.log(result);
 
@@ -585,12 +585,12 @@ describe('BrokerControl.analizeStrategy()', () => {
         const analysisBatchNumber = "Proves-0001";
         const analysisId = 1;
         const funds = 1000;   // €
-        const comission = [ 2, 4];  // comprar 2%, vendre 4%
         const market = {
             "id" : "BTC",
             "api" : "",  // pel test no es fa servir
             "strategy" : "demax2",
             "decisionWindow" : "",
+            comission: [ 2, 4],  // comprar 2%, vendre 4%
             "indicator" : [
                 { "name" : "DEMA", "period" : 10 },
                 { "name" : "DEMA", "period" : 20 }
@@ -671,7 +671,7 @@ describe('BrokerControl.analizeStrategy()', () => {
             } 
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, market, prices, decisionMaker);
 
         //console.log(result);
 
@@ -682,12 +682,12 @@ describe('BrokerControl.analizeStrategy()', () => {
         const analysisBatchNumber = "Proves-0001";
         const analysisId = 2;
         const funds = 1000;   // €
-        const comission = [ 2, 4];  // comprar 2%, vendre 4%
         const market = {
             "id" : "BTC",
             "api" : "",  // pel test no es fa servir
             "strategy" : "demax2",
             "decisionWindow" : "",
+            comission: [ 2, 4],  // comprar 2%, vendre 4%
             "indicator" : [
                 { "name" : "DEMA", "period" : 10 },
                 { "name" : "DEMA", "period" : 20 }
@@ -792,7 +792,7 @@ describe('BrokerControl.analizeStrategy()', () => {
             } 
         };
 
-        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, comission, market, prices, decisionMaker);
+        let result = await brokerControl.analizeStrategy(analysisBatchNumber, analysisId, funds, market, prices, decisionMaker);
 
         //console.log(result);
 

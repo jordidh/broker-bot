@@ -2,6 +2,8 @@
 
 /**
  * Funció que pren una decisió a partir d'un mercat i de les dades actuals i anteriors
+ * Idea: quan BBANDS i STOCH ens indiquin tots dos que hi hasobrecompra es ven 
+ * i quan tots dos indiquin sobrevenda comprem
  * 
  * @param {*} market 
  * {
@@ -38,8 +40,13 @@
  *     { "name" : "BBANDS", "period" : 20, "value" : { middle : 10, lower : 5, upper: 15 } }
  *   ]
  * }
+ * @param {*} lastAction:
+ * {
+ *      action: "", // última acció: "" quan és el primer cop o després d'un reinici / buy / sell / relax
+ *      price: 0,   // preu de compra o venda de l'últinma acció
+ * }
  */
-exports.decide = function (market, lastData, currentData) {
+exports.decide = function (market, lastData, currentData, lastAction) {
     let action = "relax";
 
     // Validem que l'estrategia de decisió correspon amb el decisionMarker
@@ -59,19 +66,22 @@ exports.decide = function (market, lastData, currentData) {
         throw new Error("indicators incorrect, strategy bbands-stoch must have 2 indicators, BBANDS and STOCH");
     }
 
-    // Mirem les bbands
-    // Vendrem quan el preu de tancament de la espelma anterior sigui superior a la línia upper de la bbands
+    // Mirem les bbands per saber si estàsobrecomprat (quan hi ha preus per sobre de la línia superior) 
+    // o sobrevenut (quan hi hapreus per sota de la línia inferior)
     let isClosePriceOverUpper = lastData.indicatorValues[0].value.upper < lastData.price;
-    // Comprarem quan el preu de tancament de l'espelma anterior sigui inferior a la línia lower de la bbands
     let isClosePriceUnderLower = lastData.indicatorValues[0].value.lower > lastData.price;
 
-    // Mirem el stoch
+    // Mirem l'stoch per saber si està sobrecomprat (>=80%) o sobrevenut (<=20%)
     let stochOver80 = lastData.indicatorValues[1].value >= 80;
     let stochUnder20 = lastData.indicatorValues[1].value <= 20;
 
     if (isClosePriceOverUpper === true && stochOver80 === true) {
+        // Vendrem quan el preu de tancament de l'espelma anterior sigui superior a la línia upper de la bbands
+        // i stoch ens indiqui que està sobrecomprats (overbought)
         action = "sell";
     } else if (isClosePriceUnderLower === true && stochUnder20 === true) {
+        // Comprarem quan el preu de tancament de l'espelma anterior sigui inferior a la línia lower de la bbands
+        // i stoch ens indiqui que està sobrevenuts (oversold)
         action = "buy";
     }
 

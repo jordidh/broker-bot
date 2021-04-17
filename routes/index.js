@@ -22,6 +22,7 @@ const decisionMakerEmax2AdxMacd = require('../api/decisionMakers/emax2-adx-macd'
 const decisionMakerBBands = require('../api/decisionMakers/bbands');
 const decisionMakerMacd = require('../api/decisionMakers/macd');
 const decisionMakerBBandsStoch = require('../api/decisionMakers/bbands-stoch');
+const decisionMakerBBandsStochCustom01 = require('../api/decisionMakers/bbands-stoch-custom-01');
 const { ExceptionHandler } = require('winston');
 
 const colors = ['#2f7ed8', '#0d233a', '#8bbc21', '#910000', '#1aadce',
@@ -179,7 +180,6 @@ router.get('/analysis', async function (req, res, next) {
 
             // Apliquem l'estratègia a sobre dels preus
             let funds = 1000;
-            let comission = [0.2, 0.2];
 
             // triem el decision maker
             let decisionMaker = null;
@@ -196,6 +196,9 @@ router.get('/analysis', async function (req, res, next) {
                 case "bbands-stoch":
                     decisionMaker = decisionMakerBBandsStoch;
                     break;
+                case "bbands-stoch-custom-01":
+                    decisionMaker = decisionMakerBBandsStochCustom01;
+                    break;
                 case "macd":
                     decisionMaker = decisionMakerMacd;
                     break;
@@ -204,7 +207,7 @@ router.get('/analysis', async function (req, res, next) {
                     break;
             }
 
-            lastData = await brokerControl.analizeStrategy("B1", 1, funds, comission, market, prices, decisionMaker);
+            lastData = await brokerControl.analizeStrategy("B1", 1, funds, market, prices, decisionMaker);
 
             if (lastData.error.length > 0) {
                 throw new Error(lastData.error[0]);
