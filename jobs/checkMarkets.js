@@ -38,7 +38,7 @@ async function checkMarket(markets) {
         // Recuperem l'última decisió presa
         // Si no hi ha dades pel mercat es retorna { id:0, market: market.id, decision:"", price: 0 }
         let lastDecisionResult = await botData.getLastMarketDecision(market.id);
-        if (lastDecisionResult.error != []) {
+        if (lastDecisionResult.error.length > 0) {
             logger.error("checking markets, error accessing database to get last decision for market.id = " + market.id + ": " + lastDecisionResult.error[0]);
             return;
         }
@@ -115,6 +115,10 @@ async function checkMarket(markets) {
         //      price: 0,   // preu de compra o venda de l'últinma acció
         // }
         let decision = await brokerControl.checkAndDecide(market, lastData.result, lastDecision, prices.result, decisionMaker);
+        if (decision.error.length > 0) {
+            logger.error("checking markets, error executing function checlAndDecide for market.id = " + market.id + ": " + decision.error[0]);
+            return;
+        }
         logger.info("Decisions result = " + JSON.stringify(decision));
 
         // Emmagatzemem les dades obtingudes
