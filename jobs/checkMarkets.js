@@ -93,6 +93,18 @@ async function checkMarket(markets) {
             case "emax2-adx-macd":
                 decisionMaker = require('../api/decisionMakers/emax2-adx-macd');
                 break;
+            case "bbands":
+                decisionMaker = require('../api/decisionMakers/bbands');
+                break;
+            case "bbands-stoch":
+                decisionMaker = require('../api/decisionMakers/bbands-stoch');
+                break;
+            case "bbands-stoch-custom-01":
+                decisionMaker = require('../api/decisionMakers/bbands-stoch-custom-01');
+                break;
+            case "macd":
+                decisionMaker = require('../api/decisionMakers/macd');
+                break;
             default:
                 logger.error("checking market strategy, error not found: " + market.strategy);
                 return;
