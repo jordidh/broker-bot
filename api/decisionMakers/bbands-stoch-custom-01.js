@@ -87,7 +87,7 @@ exports.decide = function (market, lastData, currentData, lastAction) {
     //     2.2. Si hi ha una caiguda forta (BBANDS i STOCH indiquen sobrecompra) i hem igualat o superat al límit inferior marcat com a venda => venem
     // 3. Si l'última acció va ser vendre identifiquem si hem de comprar quan es compleixi alguna de les següents condicions:
     //     3.1. Si BBANDS i STOCH ens indiquen que hi ha sobrevenda => comprem
-    switch(lastAction.action) {
+    switch(lastAction.decision) {
         case "":
         case "relax":
         case "sell":
@@ -110,7 +110,7 @@ exports.decide = function (market, lastData, currentData, lastAction) {
             }
             break;
         default:
-            throw new Error("lastAction.action unexpected, allowed values are sell/buy/relax/string.empty");
+            throw new Error("lastAction.decision unexpected, allowed values are sell/buy/relax/string.empty");
     }
 
     return action;
