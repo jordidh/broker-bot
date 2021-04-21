@@ -90,6 +90,7 @@ exports.decide = function (market, lastData, currentData, lastAction) {
     switch(lastAction.action) {
         case "":
         case "relax":
+        case "sell":
             if (isClosePriceUnderLower === true && stochUnder20 === true) {
                 // Comprarem quan el preu de tancament de l'espelma anterior sigui inferior a la línia lower de la bbands
                 // i stoch ens indiqui que està sobrevenuts (oversold)
@@ -106,11 +107,6 @@ exports.decide = function (market, lastData, currentData, lastAction) {
                     price <= market.emergencyLimitMin) {
                     action = "sell";
                 }
-            }
-            break;
-        case "sell":
-            if (isClosePriceUnderLower === true && stochUnder20 === true) {
-                action = "buy";
             }
             break;
         default:
