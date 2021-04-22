@@ -610,7 +610,8 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                     // Si l'última decisió és igual que l'actual la posem com "relax"
                     decision.result.currentData.decision = "relax";
 
-                    log.push((new Date(decision.result.currentData.windowStart)).toISOString() + " - Duplicate " + lastDecision);
+                    log.push((new Date(decision.result.currentData.windowStart)).toISOString() 
+                        + " - Duplicate " + lastDecision);
                 } else {
                     lastDecision = decision.result.currentData.decision;
                 }
@@ -640,7 +641,10 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                     // El posem a 0 ja que hem comprat crypto i ja no tenim €
                     result.fundsEnd = 0;
 
-                    log.push((new Date(decision.result.currentData.windowStart)).toISOString() + " - buy at price " + decision.result.currentData.price);
+                    log.push((new Date(decision.result.currentData.windowStart)).toISOString() 
+                        + " - buy at price " + decision.result.currentData.price.toFixed(2)
+                        + " - comission " + buyComission.toFixed(2)
+                        + " - volume " + decision.result.currentData.volume.toFixed(2));
                     break;
                 case "sell":
                     // Si volume és 0 es que no hi ha res per vendre => no fem la venda
@@ -661,7 +665,11 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                         decision.result.currentData.buyPrice = 0;
 
                         //console.log(result);
-                        log.push((new Date(decision.result.currentData.windowStart)).toISOString() + " - sell at price " + decision.result.currentData.price);
+                        log.push((new Date(decision.result.currentData.windowStart)).toISOString() 
+                            + " - sell at price " + decision.result.currentData.price.toFixed(2)
+                            + " - comission " + sellComission.toFixed(2)
+                            + " - funds " + result.fundsEnd.toFixed(2)
+                            + " - profit " + result.profit.toFixed(2));
 
                     } else {
                         // El volum es manté constant
