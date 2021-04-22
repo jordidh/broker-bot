@@ -124,7 +124,8 @@ router.get('/analysis', async function (req, res, next) {
         "xAxisDesc" : "Date times in ISO format",
         "xAxisCategories" : "[]",  /// array amb els timestamps
         "tooltipValueSuffix" : "€",
-        "series" : {}
+        "series" : {},
+        "log" : []
     }
 
     try {
@@ -460,6 +461,8 @@ router.get('/analysis', async function (req, res, next) {
         dataToShow.xAxisCategories = JSON.stringify(timestamps);
         dataToShow.series = JSON.stringify(series);
 
+        dataToShow.log = lastData.log;
+
         res.render('analysis', { 
             name: pjson.name, 
             version: pjson.version,
@@ -642,11 +645,11 @@ router.post('/prices', async function (req, res, next) {
         // Guardem les dades, entre el rang definit en un fitxer per poder testejar diferents estrategies
 
         // Convert to 2011-10-05T14:48:00.000Z
-        let startStringDate = req.body.startDate + "T" + req.body.startTime + ":00.000Z";
+        let startStringDate = req.body.startDate + "T" + req.body.startTime + (req.body.startTime.length < 8 ? ":00.000Z" : ".000Z");
         let startDate = new Date(startStringDate);
         let startDateEpoch = startDate.getTime();
 
-        let endStringDate = req.body.endDate + "T" + req.body.endTime + ":00.000Z";
+        let endStringDate = req.body.endDate + "T" + req.body.endTime + (req.body.endTime.length < 8 ? ":00.000Z" : ".000Z");
         let endDate = new Date(endStringDate);
         let endDateEpoch = endDate.getTime();
 

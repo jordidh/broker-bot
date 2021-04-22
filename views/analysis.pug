@@ -28,6 +28,11 @@ block content
     | Total comission = #{data.totalComission}
     | Total profit = #{data.totalProfit}
 
+  if data.log
+    p Logs:
+    each l, i in data.log
+      p #{l}
+
   script(type='text/javascript').
     // create the chart
     var colors = Highcharts.getOptions().colors;
@@ -73,6 +78,32 @@ block content
       tooltip: {
         valueSuffix: '#{data.tooltipValueSuffix}'
       },
+
+      annotations: [{
+        draggable: '',
+        labelOptions: {
+          backgroundColor: 'rgba(255,255,255,0.5)',
+          verticalAlign: 'top',
+          y: 15
+        },
+        labels: [{
+          point: {
+            xAxis: 0,
+            yAxis: 0,
+            x: 1616623200,
+            y: 30000
+          },
+          text: 'Arbois'
+        }, {
+          point: {
+            xAxis: 0,
+            yAxis: 0,
+            x: 1617141600,
+            y: 30000
+          },
+          text: 'Montrond'
+        }]
+      }],
 
       plotOptions: {
         series: {

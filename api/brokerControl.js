@@ -570,7 +570,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
         let lastData = { };
         let lastDecision = "";
 
-        let log = "";
+        let log = [];
 
         // Executem el checkAndDecide per cada price i guardem les dades resultants
         // per analitzarles posteriorment
@@ -596,7 +596,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
             //      action: "", // última acció: "" quan és el primer cop o després d'un reinici / buy / sell / relax
             //      price: 0,   // preu de compra o venda de l'últinma acció
             // }
-            let decision = await this.checkAndDecide(market, lastData, { action: lastDecision, price: 0 }, partialPrices, decisionMaker);
+            let decision = await this.checkAndDecide(market, lastData, { decision: lastDecision, price: 0 }, partialPrices, decisionMaker);
             if (decision.error.length > 0) {
                 console.error("Error in checkAndDecide " + decision.error[0]);
                 return decision;
@@ -610,7 +610,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                     // Si l'última decisió és igual que l'actual la posem com "relax"
                     decision.result.currentData.decision = "relax";
 
-                    log += decision.result.currentData.windowStart + " - Duplicate " + lastDecision + "\n";
+                    log.push((new Date(decision.result.currentData.windowStart)).toISOString() + " - Duplicate " + lastDecision);
                 } else {
                     lastDecision = decision.result.currentData.decision;
                 }
@@ -640,7 +640,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                     // El posem a 0 ja que hem comprat crypto i ja no tenim €
                     result.fundsEnd = 0;
 
-                    log += decision.result.currentData.windowStart + " - " + decision.result.currentData.decision + "\n";
+                    log.push((new Date(decision.result.currentData.windowStart)).toISOString() + " - buy at price " + decision.result.currentData.price);
                     break;
                 case "sell":
                     // Si volume és 0 es que no hi ha res per vendre => no fem la venda
@@ -661,6 +661,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                         decision.result.currentData.buyPrice = 0;
 
                         //console.log(result);
+                        log.push((new Date(decision.result.currentData.windowStart)).toISOString() + " - sell at price " + decision.result.currentData.price);
 
                     } else {
                         // El volum es manté constant
@@ -670,8 +671,6 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
                         // Marquem que no es ven
                         decision.result.currentData.decision = "relax";
                     }
-                    
-                    log += decision.result.currentData.windowStart + " - " + decision.result.currentData.decision + "\n";
 
                     break;
             }
@@ -692,7 +691,7 @@ exports.analizeStrategy = async function(analysisBatchNumber, analysisId, funds,
     } catch (e) {
         return {
             "error" : [ "Exception analizing strategy " + e.message ],
-            "log" : "",
+            "log" : [],
             "result" : e
         }
     }
