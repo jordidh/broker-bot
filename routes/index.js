@@ -679,10 +679,12 @@ router.post('/prices', async function (req, res, next) {
         while(fileExists) {
             await fs.access(TEST_DATA_PATH + "/" + filename + (i > 0 ? i.toString() : "") + fileextension)
             .then( function(fe) {
+                // Si existeix el fitxer li posem un prefix
                 i++;
             })
             .catch( function(ex) {
-                filename = filename + i;
+                // Si no existeix el fitxer ens quedem amb el nom actual
+                filename = filename + (i > 0 ? i.toString() : "");
                 fileExists = false;
             });
         }
