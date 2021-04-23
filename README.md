@@ -36,14 +36,14 @@ https://api.kraken.com/0/public/OHLC?pair=BTCEUR   // retorna les 12h últimes a
     result: {
         XXBTZEUR: [
             [
-                1614933060, // 2021/03/05 08:31:00 +0000  (ara són les 2021/03/05 20:29:00 +0000)
-                "39326.2",
-                "39326.2",
-                "39279.7",
-                "39313.9",
-                "39320.3",
-                "4.88234043",
-                38
+                1614933060,     // 2021/03/05 08:31:00 +0000  (ara són les 2021/03/05 20:29:00 +0000)
+                "39326.2",      // open
+                "39326.2",      // high
+                "39279.7",      // low
+                "39313.9",      // close
+                "39320.3",      // vwap
+                "4.88234043",   // volume
+                38              // count
             ],
             [ ... ]
         ],
@@ -55,6 +55,10 @@ https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=5   // retorna les 48h
 https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=60   // retorna l'últim mes a intervals de 60 minuts
 https://api.kraken.com/0/public/OHLC?pair=BTCEUR&interval=1440   // retorna els últims 2 anys a intervals de 1440 minuts (24 hores)
 ```
+
+## Obtenció de dades històriques de kraken en format OHLCVT (Open, High, Low, Close, Volume, Trades)
+https://support.kraken.com/hc/en-us/articles/360047124832-Downloadable-historical-OHLCVT-Open-High-Low-Close-Volume-Trades-data
+
 
 # Configuració
 El fitxer de configuració ha de tenir la següent estructura:

@@ -30,13 +30,27 @@ block content
           .container
             fieldset
               form(action='analysis', method='get')
-                | 🧪 Test with prices &nbsp;
+                | 🧪 Analyze OHLC prices &nbsp;
                 input.ghost-input(name='market', type='hidden', value=market.id)
                 input.ghost-input(name='numberOfValues', type='hidden', value=999999)
                 select(name= 'testData')
                   each prices, i in testPrices
                     option(value=prices) #{prices}
                 input.ghost-button(name='btn', type='submit', value='Test')
+                p.small * Aquests fitxers han de tenir el següent format: [ [&#60;time en ms&#62;, &#60;open&#62;, &#60;high&#62;, &#60;low&#62;, &#60;close&#62;], ... ] 
+                p.small * Per crear aquests fitxers anar a /prices i descarregar dades de kraken a fitxer
+          .container
+            fieldset
+              form(action='analysis', method='get')
+                | 🧪 Analyze csv OHLCVT historical prices downloaded from kraken &nbsp;
+                input.ghost-input(name='market', type='hidden', value=market.id)
+                input.ghost-input(name='numberOfValues', type='hidden', value=999999)
+                select(name= 'testData')
+                  each prices, i in testPricesOHLCVT
+                    option(value=prices) #{prices}
+                input.ghost-button(name='btn', type='submit', value='TestOHLCVT')
+                p.small * Aquests fitxers han de tenir el següent format: [ [&#60;time en ms&#62;, &#60;open&#62;, &#60;high&#62;, &#60;low&#62;, &#60;close&#62;], ... ] 
+                p.small * Per crear aquests fitxers anar a https://drive.google.com/drive/folders/1sqt3kvw_Y5yOfF6HLG_xfAXae0LsVZWH i descarregar fitxers
         if market.tradingBots
           each tbot, i in market.tradingBots
             p Trading bots linked with this market:

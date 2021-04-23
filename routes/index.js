@@ -29,6 +29,7 @@ const colors = ['#2f7ed8', '#0d233a', '#8bbc21', '#910000', '#1aadce',
 '#492970', '#f28f43', '#77a1e5', '#c42525', '#a6c96a'];
 
 const TEST_DATA_PATH = "./database/prices";
+const TEST_DATA_PATH_KRAKEN = "./database/kraken";
 
 const EXCHANGES = [
     { name : "Kraken", url : "https://api.kraken.com/0/public/OHLC" }
@@ -93,8 +94,10 @@ router.get('/markets', async function (req, res, next) {
     try {
         // Recuperem tots els fitxers JSON amb dades de prova per mostrar-los i que es pugui analitzar
         let testPrices = await fs.readdir(TEST_DATA_PATH);
+        let testPricesOHLCVT = await fs.readdir(TEST_DATA_PATH_KRAKEN);
 
-        res.render('markets', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, config : config.jobs.checkMarkets, testPrices : testPrices });
+        res.render('markets', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, 
+            config : config.jobs.checkMarkets, testPrices : testPrices, testPricesOHLCVT : testPricesOHLCVT });
     } catch (e) {
         logger.error(e);
         res.render('markets', { name: pjson.name, version: pjson.version, baseUrl : config.APP_CLIENT_BASE_URL, m_alert: e.message });
@@ -176,8 +179,38 @@ router.get('/analysis', async function (req, res, next) {
         let lastData = [];
         if (req.query.testData) {
             // recuperem les dades de test
-            const rawPrices = await fs.readFile(TEST_DATA_PATH + "/" + req.query.testData, "ascii");
-            const prices = JSON.parse(rawPrices); // Array d'arrays on cada element ha de ser un array del tipus [ unixtime, obertura, màxim, mínim, tancament ]
+            let rawPrices = null;
+            let prices = null;
+
+            // Segons el valor de btn estarem obrint dades guardades en format JSON o fitxers CSV
+            if (req.query.btn === "Test") {
+                // Esperem que en el fitxer hi hagi una cosa similar a (els temps estan en ms):
+                // [[1617816600000,56213.1,56335.6,55971.9,56006.1],...]
+                rawPrices = await fs.readFile(TEST_DATA_PATH + "/" + req.query.testData, "ascii");
+                prices = JSON.parse(rawPrices); // Array d'arrays on cada element ha de ser un array del tipus [ unixtime, obertura, màxim, mínim, tancament ]
+            } else if (req.query.btn === "TestOHLCVT") {
+                rawPrices = await fs.readFile(TEST_DATA_PATH_KRAKEN + "/" + req.query.testData, "ascii");
+                // Convert csv data to a JSON array of arrays
+                // Esperem que en el fitxer hi hagi una cosa similar a (el temps estan en segons):
+                // 1538140560,3.35,3.35,3.35,3.35,19.95012969,6
+                // 1538140620,3.35,3.5,3.35,3.5,27.95012986,9
+                // ...
+                prices = rawPrices.split("\n"); // Convertim l'string separat per \n en un array
+                prices = prices.map(l => l.split(",")); // Convertim cada element de l'array (valors separats per comes) en un altre array del tipus [ unixtime, obertura, màxim, mínim, tancament ]
+                prices = prices.map(function(l) {
+                    return [
+                        Number(l[0]) * 1000,
+                        Number(l[1]),
+                        Number(l[2]),
+                        Number(l[3]),
+                        Number(l[4]),
+                        Number(l[5]),
+                        Number(l[6])
+                    ]
+                }); // afegim 000 al primer element
+            } else {
+                throw new Error("req.query.btn has an unexpected value of " + req.query.btn);
+            }
 
             // Apliquem l'estratègia a sobre dels preus
             let funds = 1000;
@@ -565,6 +598,8 @@ router.get('/prices', function (req, res, next) {
                     let jsonReceived = JSON.parse(data);
 
                     // Convertim el json obtingut de kraken a un json que es pugui mostrar a la gràfica highcharts
+                    // Hem rebut: <time en segons>, <open>, <high>, <low>, <close>, <vwap>, <volume>, <count>
+                    // Ho convertim a: <time en ms>, <open>, <high>, <low>, <close>
                     // Com que no sabem el nom del pair obtingut accedim a la primera propietat de l'objecte
                     // let dataWithChartFormat = jsonReceived.result.XXBTZEUR.map(function(element) {
                     let dataWithChartFormat = jsonReceived.result[Object.keys(jsonReceived.result)[0]].map(function(element) {

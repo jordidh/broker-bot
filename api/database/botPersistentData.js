@@ -183,7 +183,7 @@ class BotPersistentData {
     }
 
     /**
-     * Funció que guarda dades d'unmercat a la BD
+     * Funció que guarda dades d'un mercat a la BD
      * @param {*} data : objecte del tipus: {
      *   market : "id",
      *   windowStart : 1614933060,
